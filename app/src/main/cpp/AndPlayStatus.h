@@ -7,7 +7,14 @@
 
 
 class AndPlayStatus {
+public:
+    bool exit;
+    bool play  = false;
+    bool puase = false;
+    bool seek  = false;
 
+public:
+    AndPlayStatus();
 };
 
 

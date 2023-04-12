@@ -22,9 +22,11 @@ public:
     AVFormatContext *formatCtx = NULL;
 
     AndAudio *andAudio = NULL;
+    AndCallJava *callJava = NULL;
 
 
 public:
+    AndFFmpeg(AndCallJava *callJava, const char *url);
     int prepared();
 
 };

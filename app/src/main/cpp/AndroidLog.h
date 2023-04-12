@@ -12,8 +12,8 @@
 
 #define LOG_DEBUG true
 
-#define LOGD(FORMAT,...) __android_log_print(ANDROID_LOG_DEBUG,"david",FORMAT,##__VA_ARGS__);
-#define LOGE(FORMAT,...) __android_log_print(ANDROID_LOG_ERROR,"david",FORMAT,##__VA_ARGS__);
+#define LOGD(FORMAT,...) __android_log_print(ANDROID_LOG_DEBUG,"baiyang",FORMAT,##__VA_ARGS__);
+#define LOGE(FORMAT,...) __android_log_print(ANDROID_LOG_ERROR,"baiyang",FORMAT,##__VA_ARGS__);
 
 
 #endif //MUSICPLAYER_ANDROIDLOG_H

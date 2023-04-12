@@ -4,31 +4,31 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.example.musicplayer.lisnter.IPlayerListener;
-import com.example.musicplayer.lisnter.MNOnParparedListener;
+import com.example.musicplayer.lisnter.IOnPreparedListener;
 
 public class AndPlayer {
-    MNOnParparedListener mnOnParparedListener;
+    IOnPreparedListener onPreparedListener;
+
     static {
-        System.loadLibrary("native-lib");
+        System.loadLibrary("musicplayer");
     }
-    private String source;//数据源
+    private String source; // 数据源
     public void setSource(String source)
     {
         this.source = source;
     }
-    public void parpared()
+    public void prepared()
     {
-        if(TextUtils.isEmpty(source))
-        {
-            Log.d("BaiYang","source not be empty");
+        if(TextUtils.isEmpty(source)) {
+            Log.e("AndPlayer","source is empty");
             return;
         }
-
         // native层  开启子线程
         new Thread(new Runnable() {
             @Override
             public void run() {
-                n_parpared(source);
+                Log.e("AndPlayer","start pthread to prepare");
+                n_prepared(source);
             }
         }).start();
     }
@@ -37,7 +37,7 @@ public class AndPlayer {
     {
         if(TextUtils.isEmpty(source))
         {
-            Log.d("david","source is empty");
+            Log.d("AndPlayer","source is empty");
             return;
         }
         new Thread(new Runnable() {
@@ -54,10 +54,16 @@ public class AndPlayer {
     public native void n_start();
     private native void n_pause();
 
+    public native void n_prepared(String source);
 
-    public native void n_parpared(String source);
+    // 在Native层调用onCallPrepared、onCallTimeInfo
+    public void onCallPrepared() {
+        Log.e("AndPlayer", "onCallPrepared");
+        if (onPreparedListener != null) {
+            onPreparedListener.onPrepared();
+        }
 
-
+    }
     public void onCallTimeInfo(int currentTime, int totalTime)
     {
         if (playerListener == null) {
@@ -66,16 +72,9 @@ public class AndPlayer {
         playerListener.onCurrentTime(currentTime, totalTime);
 
     }
-    public void onCallParpared() {
-        Log.d("david--->", "onCallParpared");
 
-        if (mnOnParparedListener != null) {
-            mnOnParparedListener.onParpared();
-        }
-    }
-
-    public void setMnOnParparedListener(MNOnParparedListener mnOnParparedListener) {
-        this.mnOnParparedListener = mnOnParparedListener;
+    public void setOnPreparedListener(IOnPreparedListener iOnPreparedListener) {
+        this.onPreparedListener = iOnPreparedListener;
     }
     private IPlayerListener playerListener;
 

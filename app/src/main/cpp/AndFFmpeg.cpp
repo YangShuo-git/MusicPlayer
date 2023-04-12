@@ -6,6 +6,10 @@
 #include "AndFFmpeg.h"
 #include "AndroidLog.h"
 
+AndFFmpeg::AndFFmpeg(AndCallJava *callJava, const char *url) {
+    this->callJava = callJava;
+    this->url = url;
+}
 
 int AndFFmpeg::prepared() {
     avformat_network_init();
@@ -24,10 +28,10 @@ int AndFFmpeg::prepared() {
         return -1;
     }
 
-    // 遍历获取流索引
+    // 遍历获取流索引、解码器参数
     for (int i = 0; i < formatCtx->nb_streams; ++i) {
         if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            if (andAudio) {
+            if (andAudio == NULL) {
                 andAudio = new AndAudio();
                 andAudio->audioIndex = i;
                 andAudio->codecpar = formatCtx->streams[i]->codecpar;
@@ -35,12 +39,11 @@ int AndFFmpeg::prepared() {
             break;
         }
     }
-
     if (andAudio->audioIndex == -1) {
         LOGD("Couldn't find a audio stream.\n");
         return -1;
     }
-    LOGD("成功找到音频频流.\n");
+    LOGD("成功找到音频流.\n");
     /* ************************** 解封装结束 ************************** */
 
     /* ************************ 打开解码器4步曲 ************************ */
@@ -51,10 +54,12 @@ int AndFFmpeg::prepared() {
         LOGD("Couldn't open audio codec.\n");
         return -1;
     }
-    LOGD("成功打开解码器.\n");
+    LOGD("成功打开音频解码器.\n");
     /* ************************ 打开解码器结束 ************************ */
 
-    // 然后将状态回调到java层
+    // 回调java层函数，可以将一些状态回调到java层
+    callJava->onCallPrepared(MAIN_THREAD);
+
     return 0;
 }
 

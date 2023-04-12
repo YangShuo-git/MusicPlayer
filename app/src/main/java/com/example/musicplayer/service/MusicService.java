@@ -14,13 +14,13 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.musicplayer.lisnter.IPlayerListener;
-import com.example.musicplayer.lisnter.MNOnParparedListener;
+import com.example.musicplayer.lisnter.IOnPreparedListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MusicService extends Service implements MediaPlayer.OnCompletionListener {
-    private static final String TAG = "David";
+    private static final String TAG = "baiyang";
     private AndPlayer andPlayer;
     /*操作指令*/
     /*操作指令*/
@@ -65,9 +65,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         super.onCreate();
         initBoardCastReceiver();
         andPlayer = new AndPlayer();
-        andPlayer.setMnOnParparedListener(new MNOnParparedListener() {
+        andPlayer.setOnPreparedListener(new IOnPreparedListener() {
             @Override
-            public void onParpared() {
+            public void onPrepared() {
                 andPlayer.start();
             }
         });
@@ -111,7 +111,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 return null;
             }
         });
-        andPlayer.parpared();
+        andPlayer.prepared();
     }
 
     private void initBoardCastReceiver() {
@@ -139,7 +139,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void play(final int index) {
         String path = mMusicDatas.get(index);
         andPlayer.setSource(path);
-        andPlayer.parpared();
+        andPlayer.prepared();
     }
     private void pause() {
         andPlayer.pause();
