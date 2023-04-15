@@ -21,7 +21,7 @@ extern "C"
 
 class AndAudio {
 public:
-    int audioIndex = -1;
+    int ret = 0;
     AVCodecContext *codecCtx = NULL;
     AVCodecParameters *codecpar = NULL;
     AVCodec * avCodec = NULL;
@@ -40,17 +40,49 @@ public:
     SLObjectItf pcmPlayerObject = NULL;
     // 播放器操作接口
     SLPlayItf pcmPlayerPlay = NULL;
+    // 静音接口
+    SLMuteSoloItf  pcmMutePlay = NULL;
+    SLVolumeItf pcmVolumePlay = NULL;
+    // 缓冲器队列接口
+    SLAndroidSimpleBufferQueueItf pcmBufferQueue = NULL;
+
+    AndQueue *queue = NULL;
+    AndCallJava *callJava = NULL;
+    AndPlayStatus *playStatus = NULL;
+
+    AVPacket *avPacket = NULL;
+    AVFrame *avFrame = NULL;
+
     // 采样频率
     int sample_rate = 0;
+    // 音频流索引
+    int audioIndex = -1;
+    // 输出音频缓冲区
+    uint8_t *outBuffer = NULL;
+
+    double last_tiem; //上一次调用时间
+    int data_size = 0;
+    int duration = 0;
+
+    // 当前时间
+    double now_time;  // 当前frme时间
+    double clock;     // 当前播放的时间  准确时间
+
+    // 时间单位 总时间/帧数   单位时间     *   时间戳= pts  * 总时间/帧数
+    AVRational time_base;
+    jmethodID jmid_timeinfo;
 
 public:
-    AndAudio();
+    AndAudio(AndPlayStatus *playstatus, int sample_rate, AndCallJava *callJava);
+
+    // 解码函数
+    int resampleAudio();
 
     int getCurrentSampleRateForOpensles(int sample_rate);
 
     void initOpenSLES();
 
-    int play();
+    void play();
 
 };
 

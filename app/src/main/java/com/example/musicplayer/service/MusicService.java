@@ -1,6 +1,6 @@
 package com.example.musicplayer.service;
 
-import static com.example.musicplayer.MainActivity.PARAM_MUSIC_LIST;
+//import static com.example.musicplayer.MainActivity.PARAM_MUSIC_LIST;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -53,12 +53,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         return null;
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        mMusicDatas = intent.getStringArrayListExtra(PARAM_MUSIC_LIST);
-        Log.d("david", " mMusicDatas  " + mMusicDatas.size());
-        return super.onStartCommand(intent, flags, startId);
-    }
+//    @Override
+//    public int onStartCommand(Intent intent, int flags, int startId) {
+//        mMusicDatas = intent.getStringArrayListExtra(PARAM_MUSIC_LIST);
+//        Log.d("david", " mMusicDatas  " + mMusicDatas.size());
+//        return super.onStartCommand(intent, flags, startId);
+//    }
 
     @Override
     public void onCreate() {

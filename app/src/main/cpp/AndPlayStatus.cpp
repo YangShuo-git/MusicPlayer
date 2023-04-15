@@ -3,3 +3,7 @@
 //
 
 #include "AndPlayStatus.h"
+
+AndPlayStatus::AndPlayStatus() {
+    exit = false;
+}

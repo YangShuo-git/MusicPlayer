@@ -16,22 +16,24 @@ extern "C" {
 
 class AndFFmpeg {
 public:
-    const char *url = NULL;
-    pthread_t decodeThread;
+    pthread_t demuxThead;
     pthread_mutex_t seek_mutex;
 
+    const char *url = NULL;
     AVFormatContext *formatCtx = NULL;
 
     AndAudio *andAudio = NULL;
-
     AndCallJava *callJava = NULL;
     AndPlayStatus *playStatus = NULL;
 
 public:
-    AndFFmpeg(AndCallJava *callJava, const char *url);
+    AndFFmpeg(AndPlayStatus *playStatus, AndCallJava *callJava, const char *url);
 
-    int prepared();
+    int demuxFFmpegThead();
 
+    // 解封装
+    void prepared();
+    // 解码
     int start();
 };
 

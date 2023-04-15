@@ -38,21 +38,21 @@ import com.example.musicplayer.service.MusicService;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "baiyang";
-    private DiscView mDisc;
-    private Toolbar mToolbar;
-    private SeekBar mSeekBar;
-    private ImageView mIvPlayOrPause, mIvNext, mIvLast;
-    private TextView mTvMusicDuration,mTvTotalMusicDuration;
-    private BackgourndAnimationRelativeLayout mRootLayout;
-    public static final int MUSIC_MESSAGE = 0;
-
-    public static final String PARAM_MUSIC_LIST = "PARAM_MUSIC_LIST";
-    DisplayUtil displayUtil = new DisplayUtil();
-//    private MusicReceiver mMusicReceiver = new MusicReceiver();
-    private List<MusicData> mMusicDatas = new ArrayList<>();
-    private int totalTime;
-    private int position;
-    private boolean playState = false;
+//    private DiscView mDisc;
+//    private Toolbar mToolbar;
+//    private SeekBar mSeekBar;
+//    private ImageView mIvPlayOrPause, mIvNext, mIvLast;
+//    private TextView mTvMusicDuration,mTvTotalMusicDuration;
+//    private BackgourndAnimationRelativeLayout mRootLayout;
+//    public static final int MUSIC_MESSAGE = 0;
+//
+//    public static final String PARAM_MUSIC_LIST = "PARAM_MUSIC_LIST";
+//    DisplayUtil displayUtil = new DisplayUtil();
+////    private MusicReceiver mMusicReceiver = new MusicReceiver();
+//    private List<MusicData> mMusicDatas = new ArrayList<>();
+//    private int totalTime;
+//    private int position;
+//    private boolean playState = false;
     public boolean checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, 1);
-
         }
         return false;
     }
@@ -71,15 +70,16 @@ public class MainActivity extends AppCompatActivity {
         checkPermission();
 
         File file = new File(Environment.getExternalStorageDirectory(),"dngl.mp3");
-        AndPlayer andPlayer = new AndPlayer();
 
-        andPlayer.setSource(file.getAbsolutePath());
+        AndPlayer andPlayer = new AndPlayer();
         andPlayer.setOnPreparedListener(new IOnPreparedListener() {
             @Override
             public void onPrepared() {
-                Log.e("baiyang", "回调成功");
+                Log.d("Activity", "回调成功");
+                andPlayer.start();
             }
         });
+        andPlayer.setSource(file.getAbsolutePath());
         andPlayer.prepared();
 
 //        initMusicDatas();

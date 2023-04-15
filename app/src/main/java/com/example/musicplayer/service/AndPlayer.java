@@ -23,11 +23,11 @@ public class AndPlayer {
             Log.e("AndPlayer","source is empty");
             return;
         }
-        // 开启子线程  调用Native层方法  准备工作
+        // 开启解封装线程  调用Native层方法  准备工作
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.e("AndPlayer","start pthread to prepare");
+                Log.d("AndPlayer","start pthread to prepare");
                 n_prepared(source);
             }
         }).start();
@@ -39,7 +39,7 @@ public class AndPlayer {
             Log.e("AndPlayer","source is empty");
             return;
         }
-        // 开启子线程  调用Native层方法  开始播放
+        // 开启解码线程  调用Native层方法  开始播放
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -58,7 +58,7 @@ public class AndPlayer {
 
     // 在Native层调用onCallPrepared、onCallTimeInfo
     public void onCallPrepared() {
-        Log.e("AndPlayer", "onCallPrepared");
+        Log.d("AndPlayer", "onCallPrepared");
         if (onPreparedListener != null) {
             onPreparedListener.onPrepared();
         }

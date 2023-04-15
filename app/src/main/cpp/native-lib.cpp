@@ -3,9 +3,10 @@
 #include "AndFFmpeg.h"
 #include "AndCallJava.h"
 
+_JavaVM *javaVM = NULL;
 AndFFmpeg *ffmpeg = NULL;
 AndCallJava *callJava = NULL;
-_JavaVM *javaVM = NULL;
+AndPlayStatus *playStatus = NULL;
 
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -15,7 +16,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     JNIEnv *env;
     if(vm->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK)
     {
-
         return result;
     }
     return JNI_VERSION_1_4;
@@ -31,11 +31,13 @@ Java_com_example_musicplayer_service_AndPlayer_n_1prepared(JNIEnv *env, jobject 
         if (callJava == NULL) {
             callJava = new AndCallJava(javaVM,env,thiz);
         }
-        ffmpeg = new AndFFmpeg(callJava,source);
+        playStatus = new AndPlayStatus();
+        ffmpeg = new AndFFmpeg(playStatus, callJava,source);
+        ffmpeg->callJava = callJava;
         ffmpeg->prepared();
     }
 
-    env->ReleaseStringUTFChars(source_,source);
+//    env->ReleaseStringUTFChars(source_,source);
 }
 extern "C"
 JNIEXPORT void JNICALL

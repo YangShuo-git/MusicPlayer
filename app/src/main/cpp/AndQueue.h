@@ -24,11 +24,11 @@ public:
     AndPlayStatus *playstatus = NULL;
 
 public:
-
     AndQueue(AndPlayStatus *playstatus);
     ~AndQueue();
 
     int putAvpacket(AVPacket *packet);
+
     int getAvpacket(AVPacket *packet);
 
     int getQueueSize();

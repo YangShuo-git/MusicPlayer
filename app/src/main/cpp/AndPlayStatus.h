@@ -8,10 +8,10 @@
 
 class AndPlayStatus {
 public:
-    bool exit;
-    bool play  = false;
-    bool puase = false;
-    bool seek  = false;
+    bool exit;           // 退出
+    bool play  = false;  // 播放
+    bool puase = false;  // 暂停
+    bool seek  = false;  // seek
 
 public:
     AndPlayStatus();

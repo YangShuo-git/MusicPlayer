@@ -8,7 +8,7 @@
 #include <android/log.h>
 #include <android/native_window_jni.h>
 
-#define LOGD(...) __android_log_print(ANDROID_LOG_INFO,"baiyang",__VA_ARGS__)
+//#define LOGD(...) __android_log_print(ANDROID_LOG_INFO,"baiyang",__VA_ARGS__)
 
 #define LOG_DEBUG true
 
