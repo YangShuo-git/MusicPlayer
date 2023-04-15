@@ -14,11 +14,11 @@ AndCallJava::AndCallJava(_JavaVM *javaVM, JNIEnv *env, jobject obj) {
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
 }
 
-//回调服务类  type用来区分是主线程，还是子线程调用
+// 回调服务类  type用来区分是主线程，还是子线程调用
 void AndCallJava::onCallPrepared(int type) {
     if(type == MAIN_THREAD)
     {
-        // 这里是调用java层的 AndPlayer.onCallPrepared()
+        // Native层调用java层的方法(jobject、MethodID、参数) AndPlayer.onCallPrepared()
         jniEnv->CallVoidMethod(jobj, jmid_prepared);
     } else if(type == CHILD_THREAD)
     {

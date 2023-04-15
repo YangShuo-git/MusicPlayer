@@ -23,7 +23,7 @@ public class AndPlayer {
             Log.e("AndPlayer","source is empty");
             return;
         }
-        // native层  开启子线程
+        // 开启子线程  调用Native层方法  准备工作
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -35,11 +35,11 @@ public class AndPlayer {
 
     public void start()
     {
-        if(TextUtils.isEmpty(source))
-        {
-            Log.d("AndPlayer","source is empty");
+        if(TextUtils.isEmpty(source)) {
+            Log.e("AndPlayer","source is empty");
             return;
         }
+        // 开启子线程  调用Native层方法  开始播放
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -51,10 +51,10 @@ public class AndPlayer {
         n_pause();
     }
 
-    public native void n_start();
     private native void n_pause();
 
     public native void n_prepared(String source);
+    public native void n_start();
 
     // 在Native层调用onCallPrepared、onCallTimeInfo
     public void onCallPrepared() {
@@ -62,7 +62,6 @@ public class AndPlayer {
         if (onPreparedListener != null) {
             onPreparedListener.onPrepared();
         }
-
     }
     public void onCallTimeInfo(int currentTime, int totalTime)
     {
@@ -73,11 +72,11 @@ public class AndPlayer {
 
     }
 
+    // 设置prepared()、player的监听
     public void setOnPreparedListener(IOnPreparedListener iOnPreparedListener) {
         this.onPreparedListener = iOnPreparedListener;
     }
     private IPlayerListener playerListener;
-
     public void setPlayerListener(IPlayerListener playerListener) {
         this.playerListener = playerListener;
     }

@@ -25,6 +25,33 @@ public:
     AVCodecContext *codecCtx = NULL;
     AVCodecParameters *codecpar = NULL;
     AVCodec * avCodec = NULL;
+
+    pthread_t thread_play;
+
+    // 引擎对象
+    SLObjectItf engineObject = NULL;
+    // 引擎接口
+    SLEngineItf engineEngine = NULL;
+    // 混音器对象
+    SLObjectItf outputMixObject = NULL;
+    // 混音器接口
+    SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
+    // 播放器对象
+    SLObjectItf pcmPlayerObject = NULL;
+    // 播放器操作接口
+    SLPlayItf pcmPlayerPlay = NULL;
+    // 采样频率
+    int sample_rate = 0;
+
+public:
+    AndAudio();
+
+    int getCurrentSampleRateForOpensles(int sample_rate);
+
+    void initOpenSLES();
+
+    int play();
+
 };
 
 

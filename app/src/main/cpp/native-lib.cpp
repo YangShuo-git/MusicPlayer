@@ -37,3 +37,11 @@ Java_com_example_musicplayer_service_AndPlayer_n_1prepared(JNIEnv *env, jobject 
 
     env->ReleaseStringUTFChars(source_,source);
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_musicplayer_service_AndPlayer_n_1start(JNIEnv *env, jobject thiz) {
+    if(ffmpeg != NULL)
+    {
+        ffmpeg->start();
+    }
+}

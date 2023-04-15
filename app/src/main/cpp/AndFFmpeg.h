@@ -18,17 +18,21 @@ class AndFFmpeg {
 public:
     const char *url = NULL;
     pthread_t decodeThread;
+    pthread_mutex_t seek_mutex;
 
     AVFormatContext *formatCtx = NULL;
 
     AndAudio *andAudio = NULL;
-    AndCallJava *callJava = NULL;
 
+    AndCallJava *callJava = NULL;
+    AndPlayStatus *playStatus = NULL;
 
 public:
     AndFFmpeg(AndCallJava *callJava, const char *url);
+
     int prepared();
 
+    int start();
 };
 
 

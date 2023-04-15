@@ -76,36 +76,29 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             public void onLoad(boolean load) {
 
             }
-
             @Override
             public void onCurrentTime(int currentTime, int totalTime) {
                 Intent intent = new Intent(ACTION_STATUS_MUSIC_PLAYER_TIME);
                 intent.putExtra("currentTime", currentTime);
                 intent.putExtra("totalTime", totalTime);
                 LocalBroadcastManager.getInstance(MusicService.this).sendBroadcast(intent);
-
             }
-
             @Override
             public void onError(int code, String msg) {
 
             }
-
             @Override
             public void onPause(boolean pause) {
 
             }
-
             @Override
             public void onDbValue(int db) {
 
             }
-
             @Override
             public void onComplete() {
 
             }
-
             @Override
             public String onNext() {
                 return null;

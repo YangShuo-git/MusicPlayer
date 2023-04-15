@@ -12,6 +12,7 @@ AndFFmpeg::AndFFmpeg(AndCallJava *callJava, const char *url) {
 }
 
 int AndFFmpeg::prepared() {
+    // 初始化网络库
     avformat_network_init();
 
     /* ************************ 解封装3步曲 ************************ */
@@ -40,7 +41,7 @@ int AndFFmpeg::prepared() {
         }
     }
     if (andAudio->audioIndex == -1) {
-        LOGD("Couldn't find a audio stream.\n");
+        LOGD("Couldn't find a andAudio stream.\n");
         return -1;
     }
     LOGD("成功找到音频流.\n");
@@ -51,7 +52,7 @@ int AndFFmpeg::prepared() {
     avcodec_parameters_to_context(andAudio->codecCtx, andAudio->codecpar);
     andAudio->avCodec = avcodec_find_decoder(andAudio->codecpar->codec_id);
     if (avcodec_open2(andAudio->codecCtx , andAudio->avCodec, NULL) < 0) {
-        LOGD("Couldn't open audio codec.\n");
+        LOGD("Couldn't open andAudio codec.\n");
         return -1;
     }
     LOGD("成功打开音频解码器.\n");
@@ -60,6 +61,63 @@ int AndFFmpeg::prepared() {
     // 回调java层函数，可以将一些状态回调到java层
     callJava->onCallPrepared(MAIN_THREAD);
 
+    return 0;
+}
+
+int AndFFmpeg::start() {
+    if(andAudio == NULL) {
+        if(LOG_DEBUG) {
+            LOGE("andAudio is null");
+            return -1;
+        }
+    }
+    andAudio->play();
+
+    int count = 0;
+    while(playStatus != NULL && !playStatus->exit)
+    {
+        if(playStatus->seek)
+        {
+            continue;
+        }
+//        放入队列
+        if(andAudio->queue->getQueueSize() > 40){
+            continue;
+        }
+        AVPacket *avPacket = av_packet_alloc();
+
+//        用户停止了       最后一个 文件
+        if(av_read_frame(pFormatCtx, avPacket) == 0)
+        {
+            if(avPacket->stream_index == andAudio->streamIndex)
+            {
+                andAudio->queue->putAvpacket(avPacket);
+            } else{
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+            }
+        } else {
+            av_packet_free(&avPacket);
+            av_free(avPacket);
+//特殊情况
+            while(playStatus != NULL && !playStatus->exit)
+            {
+                if(andAudio->queue->getQueueSize() > 0)
+                {
+                    continue;
+                } else{
+                    playStatus->exit = true;
+                    break;
+                }
+            }
+        }
+
+        if(playStatus != NULL && playStatus->exit)
+        {
+            andAudio->queue->clearAvpacket();
+            playStatus->exit = true;
+        }
+    }
     return 0;
 }
 
