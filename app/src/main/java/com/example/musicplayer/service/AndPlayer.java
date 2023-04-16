@@ -39,7 +39,7 @@ public class AndPlayer {
             Log.e("AndPlayer","source is empty");
             return;
         }
-        // 开启解码线程  调用Native层方法  开始播放
+        // 开启解码线程  调用Native层方法  开始解码播放
         new Thread(new Runnable() {
             @Override
             public void run() {

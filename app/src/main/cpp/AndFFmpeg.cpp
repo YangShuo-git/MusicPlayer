@@ -71,6 +71,7 @@ int AndFFmpeg::demuxFFmpegThead() {
     /* ************************ 打开解码器结束 ************************ */
 
     // 回调java层函数，可以将一些状态回调到java层  使用子线程
+    // prepared()结束，就调用onCallPrepared()
     callJava->onCallPrepared(CHILD_THREAD);
 
     return 0;

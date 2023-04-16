@@ -14,7 +14,7 @@ AndCallJava::AndCallJava(_JavaVM *javaVM, JNIEnv *env, jobject obj) {
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
 }
 
-// 回调服务类  type用来区分是主线程，还是子线程调用
+// 回调服务类  type用来区分是主线程，还是子线程
 void AndCallJava::onCallPrepared(int type) {
     if(type == MAIN_THREAD)
     {

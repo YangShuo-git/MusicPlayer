@@ -1,6 +1,6 @@
 package com.example.musicplayer.service;
 
-//import static com.example.musicplayer.MainActivity.PARAM_MUSIC_LIST;
+import static com.example.musicplayer.MainActivity.PARAM_MUSIC_LIST;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MusicService extends Service implements MediaPlayer.OnCompletionListener {
-    private static final String TAG = "baiyang";
+    private static final String TAG = "MusicService";
     private AndPlayer andPlayer;
     /*操作指令*/
     /*操作指令*/
@@ -53,12 +53,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         return null;
     }
 
-//    @Override
-//    public int onStartCommand(Intent intent, int flags, int startId) {
-//        mMusicDatas = intent.getStringArrayListExtra(PARAM_MUSIC_LIST);
-//        Log.d("david", " mMusicDatas  " + mMusicDatas.size());
-//        return super.onStartCommand(intent, flags, startId);
-//    }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        mMusicDatas = intent.getStringArrayListExtra(PARAM_MUSIC_LIST);
+        Log.d("MusicService", " mMusicDatas  " + mMusicDatas.size());
+        return super.onStartCommand(intent, flags, startId);
+    }
 
     @Override
     public void onCreate() {
@@ -106,7 +106,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         });
         andPlayer.prepared();
     }
-
     private void initBoardCastReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ACTION_OPT_MUSIC_PLAY);
@@ -121,14 +120,13 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         intentFilter.addAction(ACTION_OPT_MUSIC_CENTER);
         LocalBroadcastManager.getInstance(this).registerReceiver(mMusicReceiver, intentFilter);
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMusicReceiver);
     }
 
-    //监听
+    // 监听
     private void play(final int index) {
         String path = mMusicDatas.get(index);
         andPlayer.setSource(path);
@@ -137,16 +135,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void pause() {
         andPlayer.pause();
     }
-
     private void resume() {
     }
-
     private void stop() {
     }
-
     private void next() {
     }
-
     private void last() {
 
     }
@@ -186,14 +180,13 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 pause();
             }
             else if (action.equals(ACTION_OPT_MUSIC_RIGHT)) {
-                Log.d("david", "----------ACTION_OPT_MUSIC_RIGHT-->");
+                Log.d("MusicService", "----------ACTION_OPT_MUSIC_RIGHT-->");
                 andPlayer.setMute(0);
             }
             else if (action.equals(ACTION_OPT_MUSIC_LEFT)) {
-                Log.d("david", "----------ACTION_OPT_MUSIC_LEFT-->");
+                Log.d("MusicService", "----------ACTION_OPT_MUSIC_LEFT-->");
                 andPlayer.setMute(1);
             }
-
             else if (action.equals(ACTION_OPT_MUSIC_CENTER)) {
                 andPlayer.setMute(2);
             }
