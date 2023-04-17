@@ -128,17 +128,14 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mIvNext.setOnClickListener(this);
         mIvPlayOrPause.setOnClickListener(this);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 position = totalTime* progress / 100;
                 mTvMusicDuration.setText(displayUtil.duration2Time(progress));
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 Log.i(TAG, "onStopTrackingTouch: "+position);
@@ -156,10 +153,10 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mTvTotalMusicDuration.setText(DisplayUtil.secdsToDateFormat(totalTime, totalTime));
     }
     private void initMusicDatas() {
-        MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"dngl.mp3").getAbsolutePath());
-        MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"nightingale.mp3").getAbsolutePath());
-        MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"cornfield_chase.mp3").getAbsolutePath());
-        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "等你归来", "程响");
+        MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music1.mp3").getAbsolutePath());
+        MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music2.mp3").getAbsolutePath());
+        MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music3.mp3").getAbsolutePath());
+        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻", "三亩地");
         MusicData musicData7 = new MusicData(R.raw.music2, R.raw.ic_music2, "Nightingale", "YANI");
         MusicData musicData8 = new MusicData(R.raw.music3, R.raw.ic_music3, "Cornfield Chase", "Hans Zimmer");
         mMusicDatas.add(musicData6);
@@ -213,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     public void onClick(View v) {
         if (v == mIvPlayOrPause) {
             playState = !playState;
-            Log.i(TAG, "onClick: ---------"+playState);
+            Log.i(TAG, "onClick: ---------" + playState);
             if (playState) {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_play);
                 pause();
@@ -230,23 +227,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         }
     }
 
-    private void play() {
-        optMusic(MusicService.ACTION_OPT_MUSIC_PLAY);
-    }
-
-    private void pause() {
-        optMusic(MusicService.ACTION_OPT_MUSIC_PAUSE);
-    }
-    public void resume( ) {
-        optMusic(MusicService.ACTION_OPT_MUSIC_RESUME);
-    }
-    private void stop() {
-        mIvPlayOrPause.setImageResource(R.drawable.ic_play);
-        mTvMusicDuration.setText(displayUtil.duration2Time(0));
-        mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
-        mSeekBar.setProgress(0);
-    }
-
     private void next() {
         mRootLayout.postDelayed(new Runnable() {
             @Override
@@ -257,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mTvMusicDuration.setText(displayUtil.duration2Time(0));
         mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
     }
-
     private void last() {
         mRootLayout.postDelayed(new Runnable() {
             @Override
@@ -268,7 +247,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mTvMusicDuration.setText(displayUtil.duration2Time(0));
         mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
     }
-
     private void complete(boolean isOver) {
         if (isOver) {
             mDisc.stop();
@@ -279,12 +257,26 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     private void optMusic(final String action) {
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(action));
     }
+    private void play() {
+        optMusic(MusicService.ACTION_OPT_MUSIC_PLAY);
+    }
+    private void pause() {
+        optMusic(MusicService.ACTION_OPT_MUSIC_PAUSE);
+    }
+    public void resume( ) {
+        optMusic(MusicService.ACTION_OPT_MUSIC_RESUME);
+    }
     private void seekTo(int position) {
         Intent intent = new Intent(MusicService.ACTION_OPT_MUSIC_SEEK_TO);
         intent.putExtra(MusicService.PARAM_MUSIC_SEEK_TO,position);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
-
+    private void stop() {
+        mIvPlayOrPause.setImageResource(R.drawable.ic_play);
+        mTvMusicDuration.setText(displayUtil.duration2Time(0));
+        mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
+        mSeekBar.setProgress(0);
+    }
 
     class MusicReceiver extends BroadcastReceiver {
         @Override
@@ -320,10 +312,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMusicReceiver);
     }
-    public void left(View view) {
-
-        optMusic(MusicService.ACTION_OPT_MUSIC_LEFT);
-    }
+    public void left(View view) { optMusic(MusicService.ACTION_OPT_MUSIC_LEFT); }
     public void right(View view) {
         optMusic(MusicService.ACTION_OPT_MUSIC_RIGHT);
     }

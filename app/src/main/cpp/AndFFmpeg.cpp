@@ -10,6 +10,8 @@ AndFFmpeg::AndFFmpeg(AndPlayStatus *playStatus, AndCallJava *callJava, const cha
     this->playStatus = playStatus;
     this->callJava = callJava;
     this->url = url;
+
+    pthread_mutex_init(&seek_mutex, NULL);
 }
 
 void *demuxFFmpeg(void *data)
@@ -48,6 +50,11 @@ int AndFFmpeg::demuxFFmpegThead() {
                 andAudio = new AndAudio(playStatus, formatCtx->streams[i]->codecpar->sample_rate, callJava);
                 andAudio->audioIndex = i;
                 andAudio->codecpar = formatCtx->streams[i]->codecpar;
+
+                andAudio->time_base = formatCtx->streams[i]->time_base;
+                andAudio->duration = formatCtx->duration / AV_TIME_BASE;
+
+                duration = andAudio->duration;
             }
             break;
         }
@@ -133,5 +140,50 @@ int AndFFmpeg::start() {
         }
     }
     return 0;
+}
+
+void AndFFmpeg::pause() {
+    if(andAudio != NULL)
+    {
+        andAudio->pause();
+    }
+}
+
+
+void AndFFmpeg::seek(jint secds) {
+    if (duration <= 0) {
+        return;
+    }
+
+    if (secds >= 0 && secds <= duration) {
+        pthread_mutex_lock(&seek_mutex);
+        if (andAudio != NULL) {
+            playStatus->seek = true;
+            andAudio->queue->clearAvpacket();
+            andAudio->clock = 0;
+            andAudio->last_time = 0;
+
+            // s    *  us
+            int64_t rel = secds * AV_TIME_BASE;
+            avformat_seek_file(formatCtx, -1, INT64_MIN, rel, INT64_MAX, 0);
+
+            playStatus->seek = false;
+        }
+        pthread_mutex_unlock(&seek_mutex);
+    }
+}
+
+void AndFFmpeg::resume() {
+    if(andAudio != NULL)
+    {
+        andAudio->resume();
+    }
+}
+
+void AndFFmpeg::setMute(jint mute) {
+    if(andAudio != NULL)
+    {
+        andAudio->setMute(mute);
+    }
 }
 

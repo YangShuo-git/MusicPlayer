@@ -78,6 +78,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             }
             @Override
             public void onCurrentTime(int currentTime, int totalTime) {
+                // 发广播 Activity就能接受到
                 Intent intent = new Intent(ACTION_STATUS_MUSIC_PLAYER_TIME);
                 intent.putExtra("currentTime", currentTime);
                 intent.putExtra("totalTime", totalTime);
@@ -157,7 +158,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.i(TAG, "onReceive: "+action);
+//            Log.i(TAG, "onReceive: "+action);
             if (action.equals(ACTION_OPT_MUSIC_PLAY)) {
                 play(mCurrentMusicIndex);
             }
@@ -173,7 +174,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 seekTo(position);
             }
             else if (action.equals(ACTION_OPT_MUSIC_RESUME)) {
-
                 resume();
             }
             else if (action.equals(ACTION_OPT_MUSIC_PAUSE)) {
@@ -191,7 +191,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 andPlayer.setMute(2);
             }
             else if (action.equals(ACTION_OPT_MUSIC_VOLUME)) {
-
+                // TODO
             }
         }
     }

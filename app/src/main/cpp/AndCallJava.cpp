@@ -34,7 +34,7 @@ void AndCallJava::onCallPrepared(int type) {
         javaVM->DetachCurrentThread();
     }
 }
-//回调   java
+// 回调
 void AndCallJava::onCallTimeInfo(int type, int curr, int total) {
     if (type == MAIN_THREAD) {
         jniEnv->CallVoidMethod(jobj, jmid_timeinfo, curr, total);

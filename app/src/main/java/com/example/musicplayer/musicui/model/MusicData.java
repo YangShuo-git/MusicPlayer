@@ -2,10 +2,6 @@ package com.example.musicplayer.musicui.model;
 
 import java.io.Serializable;
 
-/**
- * Created by AchillesL on 2016/11/15.
- */
-
 public class MusicData implements Serializable {
     /*音乐资源id*/
     private int mMusicRes;

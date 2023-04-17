@@ -84,17 +84,18 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * data)
     // opengsl es 是主动 先触发opensl，再解码
     AndAudio *andAudio = (AndAudio *) data;
     if(andAudio != NULL) {
-        // 喇叭配置 44100 2 2   数据量  44100*2*2 个字节
+        // 喇叭配置 44100 2 2   数据量则有 44100*2*2 个字节  要1s播放完
         int bufferSize = andAudio->resampleAudio();
         if(bufferSize > 0)
         {
-            //  andAudio->clock  永远大于  帧 携带时间
-//            andAudio->clock+=bufferSize /((double)(andAudio->sample_rate * 2 * 2));
-//            if(andAudio->clock - andAudio->last_tiem >= 0.1){
-//                andAudio->last_tiem = andAudio->clock;
-//                andAudio->callJava->onCallTimeInfo(CHILD_THREAD,andAudio->clock,andAudio->duration);
-//            }
-            (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, andAudio->outBuffer, bufferSize );
+            // andAudio->clock 永远大于 pts
+            // bufferSize * 单位采样点的时间
+            andAudio->clock += bufferSize / ((double)(andAudio->sample_rate * 2 * 2));
+            if(andAudio->clock - andAudio->last_time >= 0.1){
+                andAudio->last_time = andAudio->clock;
+                andAudio->callJava->onCallTimeInfo(CHILD_THREAD,andAudio->clock,andAudio->duration);
+            }
+            (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, andAudio->outBuffer, bufferSize);
         }
     }
 }
@@ -155,15 +156,15 @@ int AndAudio::resampleAudio() {
             // 获取转换后的一帧pcm的真实大小 （AudioTrack不需要这个操作，但是opensl需要）
             data_size = nb * out_channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 
-            // avFrame 等不等于  播放时 等于 1 不等于 2
-            // 时间戳  单位时间  解码时间  =    244ms       100ms    344ms
-            // now_time= avFrame->pts * (time_base.num / (double)  time_base.den);
-//            now_time= avFrame->pts * av_q2d(time_base);
-//            if(now_time < clock)
-//            {
-//                now_time = clock;
-//            }
-//            clock = now_time;
+            // 当前解码时间不等于当前播放时间   因为还要拿去播放，这个过程要耗时间
+            // time_base表示一个刻度的时间，pts表示有多少个刻度  （需要在解封装的时候获取）
+            now_time= avFrame->pts * av_q2d(time_base);
+            // now_time= avFrame->pts * (time_base.num / (double)  time_base.den);  // 与上行等价
+            if(now_time < clock)
+            {
+                now_time = clock;
+            }
+            clock = now_time;
 
             av_packet_free(&avPacket);
             av_free(avPacket);
@@ -271,4 +272,68 @@ void AndAudio::initOpenSLES() {
     // 注册回调缓冲接口  激活
     pcmBufferCallBack(pcmBufferQueue, this);
     LOGD("-------->initOpenSLES pcmPlayerObject");
+}
+
+// 有关音频播放的相关操作，都在OpenSL ES的操作接口中
+void AndAudio::pause() {
+    if(pcmPlayerPlay != NULL)
+    {
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PAUSED);
+    }
+}
+
+void AndAudio::resume() {
+    if(pcmPlayerPlay != NULL)
+    {
+
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
+    }
+}
+void AndAudio::setVolume(int percent) {
+
+    if(pcmVolumePlay != NULL) {
+        if (percent > 30) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -20);
+        } else if (percent > 25) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -22);
+        } else if (percent > 20) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -25);
+        } else if (percent > 15) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -28);
+        } else if (percent > 10) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -30);
+        } else if (percent > 5) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -34);
+        } else if (percent > 3) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -37);
+        } else if (percent > 0) {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -40);
+        } else {
+            (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -100);
+        }
+    }
+}
+
+void AndAudio::setMute(int mute) {
+    LOGE(" 声道  接口%p", pcmMutePlay);
+    LOGE(" 声道  接口%d", mute);
+    if(pcmMutePlay == NULL)
+    {
+        return;
+    }
+    this->mute = mute;
+    if(mute == 0) // right 0   左通道播放
+    {
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, false);
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, true);
+
+    } else if(mute == 1) // left
+    {
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, true);
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, false);
+    }else if(mute == 2) // right、left都静音
+    {
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, false);
+        (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, false);
+    }
 }

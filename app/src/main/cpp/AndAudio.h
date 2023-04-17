@@ -59,18 +59,20 @@ public:
     int audioIndex = -1;
     // 输出音频缓冲区
     uint8_t *outBuffer = NULL;
-
-    double last_tiem; //上一次调用时间
     int data_size = 0;
-    int duration = 0;
 
-    // 当前时间
-    double now_time;  // 当前frme时间
-    double clock;     // 当前播放的时间  准确时间
+    int duration = 0; // 总时长
+    // 时间单位 总时间/帧数   单位时间 * 时间戳= pts  * 总时间/帧数
+    AVRational time_base; // 时间基
+    double now_time;  // 当前Frme的时间（解码时间）
+    double clock;     // 当前播放的时间 （准确时间）
 
-    // 时间单位 总时间/帧数   单位时间     *   时间戳= pts  * 总时间/帧数
-    AVRational time_base;
+    double last_time; // 上一次调用时间
+
     jmethodID jmid_timeinfo;
+
+    //立体声
+    int mute = 2;
 
 public:
     AndAudio(AndPlayStatus *playstatus, int sample_rate, AndCallJava *callJava);
@@ -84,6 +86,13 @@ public:
 
     void play();
 
+    void pause();
+
+    void resume();
+
+    void setVolume(int percent);
+
+    void setMute(int mute);
 };
 
 

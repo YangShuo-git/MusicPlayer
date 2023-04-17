@@ -26,6 +26,8 @@ public:
     AndCallJava *callJava = NULL;
     AndPlayStatus *playStatus = NULL;
 
+    int duration = 0;
+
 public:
     AndFFmpeg(AndPlayStatus *playStatus, AndCallJava *callJava, const char *url);
 
@@ -35,6 +37,14 @@ public:
     void prepared();
     // 解码
     int start();
+
+    void pause();
+
+    void seek(jint i);
+
+    void resume();
+
+    void setMute(jint i);
 };
 
 
