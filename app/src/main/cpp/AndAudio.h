@@ -7,6 +7,9 @@
 
 #include "AndQueue.h"
 #include "AndCallJava.h"
+#include "SoundTouch.h"
+
+using namespace soundtouch;
 
 extern "C"
 {
@@ -53,12 +56,13 @@ public:
     AVPacket *avPacket = NULL;
     AVFrame *avFrame = NULL;
 
-    // 采样频率
-    int sample_rate = 0;
     // 音频流索引
     int audioIndex = -1;
+    // 采样频率
+    int sample_rate = 0;
     // 输出音频缓冲区
     uint8_t *outBuffer = NULL;
+    // 输出音频数据大小
     int data_size = 0;
 
     int duration = 0; // 总时长
@@ -74,11 +78,27 @@ public:
     //立体声
     int mute = 2;
 
+    // 倍速
+    float speed = 1.0f;
+    float pitch = 1.0f;
+
+    SoundTouch *soundTouch = NULL;
+    // 新的缓冲区  喂给soundTouch
+    SAMPLETYPE *sampleBuffer = NULL;
+
+    uint8_t *out_buffer = NULL;
+    // 波是否处理结束
+    bool finished = true;
+
+    // 新波的实际个数
+    int nb = 0;
+    int num = 0;
+
 public:
     AndAudio(AndPlayStatus *playstatus, int sample_rate, AndCallJava *callJava);
 
     // 解码函数
-    int resampleAudio();
+    int resampleAudio(void **pcmBuf);
 
     int getCurrentSampleRateForOpensles(int sample_rate);
 
@@ -93,6 +113,8 @@ public:
     void setVolume(int percent);
 
     void setMute(int mute);
+
+    int getSoundTouchData();
 };
 
 

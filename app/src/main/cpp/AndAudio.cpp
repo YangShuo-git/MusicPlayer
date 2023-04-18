@@ -11,6 +11,14 @@ AndAudio::AndAudio(AndPlayStatus *playStatus, int sample_rate, AndCallJava *call
     this->callJava = callJava;
     this->playStatus = playStatus;
     this->queue = new AndQueue(playStatus);
+
+    this->soundTouch = new SoundTouch();
+    this->sampleBuffer = static_cast<SAMPLETYPE *>(malloc(sample_rate * 2 * 2));
+    this->soundTouch->setSampleRate(sample_rate);
+    this->soundTouch->setChannels(2);
+    //  speed  1.1   1.5  2.1
+    this->soundTouch->setTempo(speed);
+    this->soundTouch->setPitch(pitch);
 }
 
 // C的方法 传参 this就是这个data，把当前对象传进去，就可以调用该对象的方法了
@@ -95,6 +103,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * data)
                 andAudio->last_time = andAudio->clock;
                 andAudio->callJava->onCallTimeInfo(CHILD_THREAD,andAudio->clock,andAudio->duration);
             }
+
+            // 音频的数据送往喇叭
             (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, andAudio->outBuffer, bufferSize);
         }
     }
@@ -102,7 +112,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * data)
 
 // 解码一帧音频，并进行重采样
 // 主要是获取解码后的pcm数据(outBuffer)及其实际大小(bufferSize)  因为opensl需要这两个
-int AndAudio::resampleAudio() {
+int AndAudio::resampleAudio(void **pcmBuf) {
     while(playStatus != NULL && !playStatus->exit)
     {
         avPacket = av_packet_alloc();
@@ -155,6 +165,7 @@ int AndAudio::resampleAudio() {
             int out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
             // 获取转换后的一帧pcm的真实大小 （AudioTrack不需要这个操作，但是opensl需要）
             data_size = nb * out_channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+            *pcmBuf = outBuffer;  // 将数据存放到pcmBuf中 用于变速处理
 
             // 当前解码时间不等于当前播放时间   因为还要拿去播放，这个过程要耗时间
             // time_base表示一个刻度的时间，pts表示有多少个刻度  （需要在解封装的时候获取）
@@ -289,6 +300,7 @@ void AndAudio::resume() {
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
     }
 }
+
 void AndAudio::setVolume(int percent) {
 
     if(pcmVolumePlay != NULL) {
@@ -336,4 +348,52 @@ void AndAudio::setMute(int mute) {
         (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, false);
         (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, false);
     }
+}
+
+// 获取整理之后的波形  倍速 波形变小；慢放 波形变大
+int AndAudio::getSoundTouchData() {
+    //我们先取数据 pcm就在outbuffer
+    while(playStatus != NULL && !playStatus->exit){
+        LOGE("------------------循环---------------------------finished %d",finished)
+        out_buffer = NULL;
+        if(finished){
+            // 开始整理波形，没有完成
+            finished = false;
+            // 从网络流 文件 读取数据 out_buffer  字节数量  out_buffer   是一个旧波
+            data_size = this->resampleAudio(reinterpret_cast<void **>(&out_buffer));
+            if (data_size > 0) {  // 表示有波形
+                for(int i = 0; i < data_size / 2 + 1; i++){
+                    // short  2个字节  pcm数据 因为是2声道，所以两个8位合成一个数据
+                    sampleBuffer[i]=(out_buffer[i * 2] | ((out_buffer[i * 2 + 1]) << 8));
+                }
+                // for循环后，直接丢给sountouch来整理波形
+                soundTouch->putSamples(sampleBuffer, nb);
+                // 接受一个新波 sampleBuffer
+                num = soundTouch->receiveSamples(sampleBuffer, data_size / 4);
+                LOGE("------------第一个num %d ", num);
+            }else{
+                soundTouch->flush();
+            }
+        }
+
+        if (num == 0) {
+            finished = true;
+            continue;
+        } else{
+            if(out_buffer == NULL){
+                num=soundTouch->receiveSamples(sampleBuffer, data_size / 4);
+                LOGE("------------第二个num %d ",num);
+                if(num == 0)
+                {
+                    finished = true;
+                    continue;
+                }
+            }
+            LOGE("---------------- 结束1 -----------------------")
+            return num;
+        }
+
+    }
+    LOGE("---------------- 结束2 -----------------------")
+    return 0;
 }
