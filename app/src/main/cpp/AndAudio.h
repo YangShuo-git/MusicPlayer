@@ -92,7 +92,7 @@ public:
 
     // 新波的实际个数
     int nb = 0;
-    int num = 0;
+    int num = 0;  // 整理之后的波形大小
 
 public:
     AndAudio(AndPlayStatus *playstatus, int sample_rate, AndCallJava *callJava);
