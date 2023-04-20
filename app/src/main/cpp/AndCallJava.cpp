@@ -74,8 +74,6 @@ void AndCallJava::onCallLoad(int type, bool load) {
         jniEnv->CallVoidMethod(jobj, jmid_load, load);
         javaVM->DetachCurrentThread();
     }
-
-
 }
 
 void AndCallJava::onCallRenderYUV(int width, int height, uint8_t *fy, uint8_t *fu, uint8_t *fv) {

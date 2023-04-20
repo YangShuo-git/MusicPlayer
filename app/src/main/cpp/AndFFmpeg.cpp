@@ -12,11 +12,12 @@ AndFFmpeg::AndFFmpeg(AndPlayStatus *playStatus, AndCallJava *callJava, const cha
     this->url = url;
 
     pthread_mutex_init(&seek_mutex, NULL);
+    pthread_mutex_init(&init_mutex, NULL);
 }
 
-void *demuxFFmpeg(void *data)
+void *demuxFFmpeg(void *handler)
 {
-    AndFFmpeg *andFFmpeg = (AndFFmpeg *) data;
+    AndFFmpeg *andFFmpeg = (AndFFmpeg *) handler;
     andFFmpeg->demuxFFmpegThead();
     pthread_exit(&andFFmpeg->demuxThead);
 }
@@ -25,9 +26,50 @@ void AndFFmpeg::prepared() {
     pthread_create(&demuxThead, NULL, demuxFFmpeg, this);
 }
 
+int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecpar) {
+    /* ************************ 打开解码器4步曲 ************************ */
+    *codecCtx = avcodec_alloc_context3(NULL);
+    if(!*codecCtx){
+        if(LOG_DEBUG){
+            LOGE("Couldn't alloc new decoderCtx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if (avcodec_parameters_to_context(*codecCtx, codecpar) < 0) {
+        if(LOG_DEBUG){
+            LOGE("Couldn't fill decoderCtx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    AVCodec *decoder = avcodec_find_decoder(codecpar->codec_id);
+    if(!decoder){
+        if(LOG_DEBUG){
+            LOGE("Couldn't find decoder");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if (avcodec_open2(*codecCtx , decoder, NULL) < 0) {
+        LOGE("Couldn't open vAudio codec.\n");
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    LOGD("成功打开解码器.\n");
+    /* ************************ 打开解码器结束 ************************ */
+    return 0;
+}
+
+
 int AndFFmpeg::demuxFFmpegThead() {
+    pthread_mutex_lock(&init_mutex);
     // 初始化网络库
-//    avformat_network_init();
+    avformat_network_init();
 
     /* ************************ 解封装3步曲 ************************ */
     // 1.分配解码器上下文
@@ -48,38 +90,39 @@ int AndFFmpeg::demuxFFmpegThead() {
         if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             if (andAudio == NULL) {
                 andAudio = new AndAudio(playStatus, formatCtx->streams[i]->codecpar->sample_rate, callJava);
-                andAudio->audioIndex = i;
+                andAudio->streamIndex = i;
                 andAudio->codecpar = formatCtx->streams[i]->codecpar;
 
                 andAudio->time_base = formatCtx->streams[i]->time_base;
                 andAudio->duration = formatCtx->duration / AV_TIME_BASE;
-
                 duration = andAudio->duration;
             }
-            break;
+        } else if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            if (andVideo == NULL) {
+                andVideo = new AndVideo(playStatus, callJava);
+                andVideo->streamIndex = i;
+                andVideo->codecpar = formatCtx->streams[i]->codecpar;
+            }
         }
     }
-    if (andAudio->audioIndex == -1) {
-        LOGE("Couldn't find a andAudio stream.\n");
+    if (andAudio->streamIndex == -1) {
+        LOGE("Couldn't find a vAudio stream.\n");
         return -1;
     }
     LOGD("成功找到音频流.\n");
     /* ************************** 解封装结束 ************************** */
 
-    /* ************************ 打开解码器4步曲 ************************ */
-    andAudio->codecCtx = avcodec_alloc_context3(NULL);
-    avcodec_parameters_to_context(andAudio->codecCtx, andAudio->codecpar);
-    andAudio->avCodec = avcodec_find_decoder(andAudio->codecpar->codec_id);
-    if (avcodec_open2(andAudio->codecCtx , andAudio->avCodec, NULL) < 0) {
-        LOGE("Couldn't open andAudio codec.\n");
-        return -1;
+    if (andAudio != NULL) {
+        openDecoder(&andAudio->codecCtx, andAudio->codecpar);
     }
-    LOGD("成功打开音频解码器.\n");
-    /* ************************ 打开解码器结束 ************************ */
+    if(andVideo != NULL){
+        openDecoder(&andVideo->codecCtx, andVideo->codecpar);
+    }
 
     // 回调java层函数，可以将一些状态回调到java层  使用子线程
     // prepared()结束，就调用onCallPrepared()
     callJava->onCallPrepared(CHILD_THREAD);
+    pthread_mutex_unlock(&init_mutex);
 
     return 0;
 }
@@ -87,21 +130,22 @@ int AndFFmpeg::demuxFFmpegThead() {
 int AndFFmpeg::start() {
     if(andAudio == NULL) {
         if(LOG_DEBUG) {
-            LOGE("andAudio is null");
+            LOGE("vAudio is null");
             return -1;
         }
     }
     andAudio->play();
+    andVideo->play();
+    andVideo->vAudio = andAudio;
 
     int count = 0;
     while(playStatus != NULL && !playStatus->exit)
     {
-        if(playStatus->seek)
-        {
+        if(playStatus->seek){
             continue;
         }
-        // 放入队列
-        if(andAudio->queue->getQueueSize() > 40){
+        // 放入队列  40这个值可以设大一点
+        if(andAudio->queue->getQueueSize() > 40 || andVideo->queue->getQueueSize() > 40){
             continue;
         }
 
@@ -109,27 +153,36 @@ int AndFFmpeg::start() {
         // 用户停止 或者最后一帧 文件末尾  要有清空队列的操作
         if(av_read_frame(formatCtx, avPacket) == 0)
         {
-            if(avPacket->stream_index == andAudio->audioIndex)
+            if(avPacket->stream_index == andAudio->streamIndex)
             {
                 andAudio->queue->putAvpacket(avPacket);
-            } else{
+            } else if (avPacket->stream_index == andAudio->streamIndex)
+            {
+                andVideo->queue->putAvpacket(avPacket);
+            } else
+            {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
             }
-        } else {
+        } else
+        {
             av_packet_free(&avPacket);
             av_free(avPacket);
 
             //特殊情况
             while(playStatus != NULL && !playStatus->exit)
             {
-                if(andAudio->queue->getQueueSize() > 0)
+                if(andVideo->queue->getQueueSize() > 0)
                 {
                     continue;
-                } else {
-                    playStatus->exit = true;
-                    break;
                 }
+                if(andVideo->queue->getQueueSize() > 0)
+                {
+                    continue;
+                }
+
+                playStatus->exit = true;
+                break;
             }
         }
 

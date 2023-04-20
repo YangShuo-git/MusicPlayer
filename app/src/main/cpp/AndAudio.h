@@ -57,7 +57,7 @@ public:
     AVFrame *avFrame = NULL;
 
     // 音频流索引
-    int audioIndex = -1;
+    int streamIndex = -1;
     // 采样频率
     int sample_rate = 0;
     // 输出音频缓冲区

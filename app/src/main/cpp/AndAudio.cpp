@@ -93,11 +93,11 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * handler)
     AndAudio *andAudio = (AndAudio *) handler;
     if(andAudio != NULL) {
         // 喇叭配置 44100 2 2   数据量则有 44100*2*2 个字节  要1s播放完
-        // int bufferSize = andAudio->resampleAudio();   // 未经soundTouch处理的pcm数据大小
+        // int bufferSize = vAudio->resampleAudio();   // 未经soundTouch处理的pcm数据大小
         int bufferSize = andAudio->getSoundTouchData();  // 经过soundTouch处理的pcm数据大小
         if(bufferSize > 0)
         {
-            // andAudio->clock 永远大于 pts
+            // vAudio->clock 永远大于 pts
             // bufferSize * 单位采样点的时间
             andAudio->clock += bufferSize / ((double)(andAudio->sample_rate * 2 * 2));
             if(andAudio->clock - andAudio->last_time >= 0.1){
@@ -106,7 +106,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * handler)
             }
 
             // 音频的数据送往喇叭
-            // (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, andAudio->outBuffer, bufferSize);  // 未经soundTouch处理的pcm数据
+            // (*vAudio->pcmBufferQueue)->Enqueue(vAudio->pcmBufferQueue, vAudio->outBuffer, bufferSize);  // 未经soundTouch处理的pcm数据
              (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, (char *)andAudio->sampleBuffer, bufferSize*2*2);
         }
     }

@@ -23,7 +23,7 @@ public:
     pthread_t thread_play;
     pthread_mutex_t codecMutex;
 
-    AndAudio *andAudio = NULL;
+    AndAudio *vAudio = NULL;  // 视频里必须要有audio，要做到向audio同步
     AndQueue *queue = NULL;
     AndPlayStatus *playStatus = NULL;
     AndCallJava *callJava = NULL;

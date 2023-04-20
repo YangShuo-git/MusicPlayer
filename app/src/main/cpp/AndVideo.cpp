@@ -4,21 +4,22 @@
 
 #include "AndVideo.h"
 
-AndVideo::AndVideo(AndPlayStatus *playStatus, AndCallJava *callJava) {
+AndVideo::AndVideo(AndPlayStatus *playStatus, AndCallJava *callJava)
+{
     this->playStatus = playStatus;
     this->callJava = callJava;
-    queue = new AndQueue(playStatus);
+    this->queue = new AndQueue(playStatus);
     pthread_mutex_init(&codecMutex, NULL);
 }
 
-void * playVideo(void *data)
+void * playVideo(void *handler)
 {
-//    C函数 1   C++函数2
-    AndVideo *andVideo = static_cast<AndVideo *>(data);
-//    死循环轮训
+    AndVideo *andVideo = static_cast<AndVideo *>(handler);
+
+    //  死循环轮训
     while(andVideo->playStatus != NULL && !andVideo->playStatus->exit)
     {
-//         解码 seek   puase   队列没有数据
+        // 解码 seek   puase   队列没有数据
         if(andVideo->playStatus->seek)
         {
             av_usleep(1000 * 100);
@@ -30,7 +31,7 @@ void * playVideo(void *data)
             continue;
         }
         if (andVideo->queue->getQueueSize() == 0) {
-//            网络不佳  请慢慢等待  回调应用层
+            // 队列中无数据，需要休眠  请慢慢等待  回调应用层
             if(!andVideo->playStatus->load)
             {
                 andVideo->playStatus->load = true;
@@ -38,7 +39,6 @@ void * playVideo(void *data)
                 av_usleep(1000 * 100);
                 continue;
             }
-
         }
 
         AVPacket *avPacket = av_packet_alloc();
@@ -49,23 +49,21 @@ void * playVideo(void *data)
             avPacket = NULL;
             continue;
         }
-//        视频解码 比较耗时  多线程环境
+        // 视频解码 比较耗时  多线程
         pthread_mutex_lock(&andVideo->codecMutex);
-//解码操作
+        // 解码操作
         if(avcodec_send_packet(andVideo->codecCtx, avPacket) != 0)
         {
-//            括号就失败了
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
             pthread_mutex_unlock(&andVideo->codecMutex);
             continue;
         }
-        AVFrame *avFrame = av_frame_alloc();
 
+        AVFrame *avFrame = av_frame_alloc();
         if(avcodec_receive_frame(andVideo->codecCtx, avFrame) != 0)
         {
-//          括号就失败了
             av_frame_free(&avFrame);
             av_free(avFrame);
             avFrame = NULL;
@@ -75,22 +73,21 @@ void * playVideo(void *data)
             pthread_mutex_unlock(&andVideo->codecMutex);
             continue;
         }
-//        此时解码成功了  如果 之前是yuv420  ----》   opengl
+        //  此时解码成功了  如果 之前是yuv420  ----》   opengl
         if(avFrame->format == AV_PIX_FMT_YUV420P)
         {
-//            压缩1  原始数据2
-//            avFrame->data[0];//y
-//            avFrame->data[1];//u
-//            avFrame->data[2];//v
-//            直接转换   yuv420     ---> yuv420
-//其他格式 --yuv420
-//休眠33ms  不可取33 * 1000
-//计算  音频 视频
-//            av_usleep(33 * 1000);
-
+            // 压缩1  原始数据2
+            // avFrame->data[0];//y
+            // avFrame->data[1];//u
+            // avFrame->data[2];//v
+            // 直接转换   yuv420     ---> yuv420
+            //其他格式 --yuv420
+            //休眠33ms  不可取33 * 1000
+            //计算  音频 视频
+            // av_usleep(33 * 1000);
 
             double diff = andVideo->getFrameDiffTime(avFrame);
-//            通过diff 计算休眠时间
+            // 通过diff 计算休眠时间
             av_usleep(andVideo->getDelayTime(diff) * 1000000);
             andVideo->callJava->onCallRenderYUV(
                     andVideo->codecCtx->width,
@@ -117,12 +114,8 @@ void * playVideo(void *data)
                     andVideo->codecCtx->height,
                     1);
             SwsContext *sws_ctx = sws_getContext(
-                    andVideo->codecCtx->width,
-                    andVideo->codecCtx->height,
-                    andVideo->codecCtx->pix_fmt,
-                    andVideo->codecCtx->width,
-                    andVideo->codecCtx->height,
-                    AV_PIX_FMT_YUV420P,
+                    andVideo->codecCtx->width,andVideo->codecCtx->height,andVideo->codecCtx->pix_fmt,
+                    andVideo->codecCtx->width,andVideo->codecCtx->height,AV_PIX_FMT_YUV420P,
                     SWS_BICUBIC, NULL, NULL, NULL);
 
             if(!sws_ctx)
@@ -141,7 +134,7 @@ void * playVideo(void *data)
                     avFrame->height,
                     pFrameYUV420P->data,
                     pFrameYUV420P->linesize);
-            //渲染
+            // 渲染
             andVideo->callJava->onCallRenderYUV(
                     andVideo->codecCtx->width,
                     andVideo->codecCtx->height,
@@ -164,10 +157,10 @@ void * playVideo(void *data)
     }
     pthread_exit(&andVideo->thread_play);
 }
-void AndVideo::play() {
-//    子线程播放   解码
-    pthread_create(&thread_play, NULL, playVideo, this);
 
+void AndVideo::play() {
+//    子线程 解码 播放
+    pthread_create(&thread_play, NULL, playVideo, this);
 }
 
 double AndVideo::getFrameDiffTime(AVFrame *avFrame) {
@@ -186,7 +179,7 @@ double AndVideo::getFrameDiffTime(AVFrame *avFrame) {
         clock = pts;
     }
 
-    double diff = andAudio->clock - clock;
+    double diff = vAudio->clock - clock;
     return diff;
 }
 
@@ -234,7 +227,7 @@ double AndVideo::getDelayTime(double diff) {
     }
 //视频太快了  音频赶不上
     if (diff <= -10) {
-        andAudio->queue->clearAvpacket();
+        vAudio->queue->clearAvpacket();
         delayTime = defaultDelayTime;
         LOGE("====================>视频太快了");
     }
