@@ -88,6 +88,7 @@ void AndCallJava::onCallRenderYUV(int width, int height, uint8_t *fy, uint8_t *f
         return;
     }
 
+    // yuv420的格式，计算y、u、v的大小
     jbyteArray y = jniEnv->NewByteArray(width * height);
     jniEnv->SetByteArrayRegion(y, 0, width * height, reinterpret_cast<const jbyte *>(fy));
 

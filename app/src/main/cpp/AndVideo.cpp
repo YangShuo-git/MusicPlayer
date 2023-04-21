@@ -73,29 +73,24 @@ void * playVideo(void *handler)
             pthread_mutex_unlock(&andVideo->codecMutex);
             continue;
         }
-        //  此时解码成功了  如果 之前是yuv420  ----》   opengl
+
+        // 解码成功 回调送去渲染
         if(avFrame->format == AV_PIX_FMT_YUV420P)
         {
-            // 压缩1  原始数据2
-            // avFrame->data[0];//y
-            // avFrame->data[1];//u
-            // avFrame->data[2];//v
-            // 直接转换   yuv420     ---> yuv420
-            //其他格式 --yuv420
-            //休眠33ms  不可取33 * 1000
-            //计算  音频 视频
-            // av_usleep(33 * 1000);
+            LOGE("当前视频是YUV420P格式");
+            // avFrame->data[0]代表y，avFrame->data[1]代表u， avFrame->data[2]代表v
+            // 休眠33ms  不可取33 * 1000
+             av_usleep(33 * 1000);
 
-            double diff = andVideo->getFrameDiffTime(avFrame);
+//            double diff = andVideo->getFrameDiffTime(avFrame);
             // 通过diff 计算休眠时间
-            av_usleep(andVideo->getDelayTime(diff) * 1000000);
+//            av_usleep(andVideo->getDelayTime(diff) * 1000000);
             andVideo->callJava->onCallRenderYUV(
                     andVideo->codecCtx->width,
                     andVideo->codecCtx->height,
                     avFrame->data[0],
                     avFrame->data[1],
                     avFrame->data[2]);
-            LOGE("当前视频是YUV420P格式");
         }else{
             LOGE("当前视频不是YUV420P格式");
             AVFrame *pFrameYUV420P = av_frame_alloc();
@@ -134,7 +129,7 @@ void * playVideo(void *handler)
                     avFrame->height,
                     pFrameYUV420P->data,
                     pFrameYUV420P->linesize);
-            // 渲染
+            // 回调渲染
             andVideo->callJava->onCallRenderYUV(
                     andVideo->codecCtx->width,
                     andVideo->codecCtx->height,
@@ -159,12 +154,12 @@ void * playVideo(void *handler)
 }
 
 void AndVideo::play() {
-//    子线程 解码 播放
+    // 子线程 解码 播放
     pthread_create(&thread_play, NULL, playVideo, this);
 }
 
 double AndVideo::getFrameDiffTime(AVFrame *avFrame) {
-//    先获取视频时间戳  处理之后
+    // 先获取视频时间戳  处理之后
     double pts = av_frame_get_best_effort_timestamp(avFrame);
     if(pts == AV_NOPTS_VALUE)
     {

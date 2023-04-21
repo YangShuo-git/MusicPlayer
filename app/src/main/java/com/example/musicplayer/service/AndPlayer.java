@@ -5,9 +5,11 @@ import android.util.Log;
 
 import com.example.musicplayer.lisnter.IPlayerListener;
 import com.example.musicplayer.lisnter.IOnPreparedListener;
+import com.example.musicplayer.opengl.AndGLSurfaceView;
 
 public class AndPlayer {
     IOnPreparedListener onPreparedListener;
+    private AndGLSurfaceView andGLSfView;
     private IPlayerListener playerListener;
 
     static {
@@ -18,7 +20,11 @@ public class AndPlayer {
     {
         this.source = source;
     }
-
+    public void setAndGLSurfaceView(AndGLSurfaceView surfaceview) {
+        this.andGLSfView = surfaceview;
+        Log.i("AndPlayer", "setAndGLSurfaceView: -------------" + this.hashCode());
+    }
+    
     // 设置prepared()、player的监听
     public void setOnPreparedListener(IOnPreparedListener iOnPreparedListener) {
         this.onPreparedListener = iOnPreparedListener;
@@ -27,7 +33,9 @@ public class AndPlayer {
         this.playerListener = playerListener;
     }
 
-    // 在Native层调用onCallPrepared、onCallTimeInfo
+    /**
+     * 在Native层调用java的方法  回调的方式，应用层入口
+     */
     public void onCallPrepared() {
         Log.d("AndPlayer", "onCallPrepared");
         if (onPreparedListener != null) {
@@ -41,6 +49,14 @@ public class AndPlayer {
             return;
         }
         playerListener.onCurrentTime(currentTime, totalTime);
+    }
+    public void onCallRenderYUV(int width, int height, byte[] y, byte[] u, byte[] v)
+    {
+        // opengl渲染  的java版本
+//        if( this.davidView != null)
+//        {
+//            this.davidView.setYUVData(width, height, y, u, v);
+//        }
     }
     public void prepared()
     {
