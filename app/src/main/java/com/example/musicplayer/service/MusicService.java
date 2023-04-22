@@ -1,6 +1,6 @@
 package com.example.musicplayer.service;
 
-import static com.example.musicplayer.MainActivity.PARAM_MUSIC_LIST;
+import static com.example.musicplayer.MainActivityMusic.PARAM_MUSIC_LIST;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;

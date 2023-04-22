@@ -64,7 +64,7 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_video);
+        setContentView(R.layout.activity_main_music);
         checkPermission();
 
 //        File file = new File(Environment.getExternalStorageDirectory(),"dngl.mp3");

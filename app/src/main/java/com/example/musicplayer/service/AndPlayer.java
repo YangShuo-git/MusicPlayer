@@ -24,7 +24,7 @@ public class AndPlayer {
         this.andGLSfView = surfaceview;
         Log.i("AndPlayer", "setAndGLSurfaceView: -------------" + this.hashCode());
     }
-    
+
     // 设置prepared()、player的监听
     public void setOnPreparedListener(IOnPreparedListener iOnPreparedListener) {
         this.onPreparedListener = iOnPreparedListener;
@@ -57,6 +57,12 @@ public class AndPlayer {
 //        {
 //            this.davidView.setYUVData(width, height, y, u, v);
 //        }
+    }
+    public void onCallLoad(boolean load)
+    {
+//        队列 网络 有问题    加载框
+
+
     }
     public void prepared()
     {

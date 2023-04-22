@@ -60,7 +60,6 @@ int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecp
         pthread_mutex_unlock(&init_mutex);
         return -1;
     }
-    LOGD("成功打开解码器.\n");
     /* ************************ 打开解码器结束 ************************ */
     return 0;
 }
@@ -96,12 +95,14 @@ int AndFFmpeg::demuxFFmpegThead() {
                 andAudio->time_base = formatCtx->streams[i]->time_base;
                 andAudio->duration = formatCtx->duration / AV_TIME_BASE;
                 duration = andAudio->duration;
+                LOGD("成功找到音频流.\n");
             }
         } else if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             if (andVideo == NULL) {
                 andVideo = new AndVideo(playStatus, callJava);
                 andVideo->streamIndex = i;
                 andVideo->codecpar = formatCtx->streams[i]->codecpar;
+                LOGD("成功找到视频流.\n");
             }
         }
     }
@@ -109,14 +110,15 @@ int AndFFmpeg::demuxFFmpegThead() {
         LOGE("Couldn't find a vAudio stream.\n");
         return -1;
     }
-    LOGD("成功找到音频流.\n");
     /* ************************** 解封装结束 ************************** */
 
     if (andAudio != NULL) {
         openDecoder(&andAudio->codecCtx, andAudio->codecpar);
+        LOGD("成功打开音频解码器.\n");
     }
     if(andVideo != NULL){
         openDecoder(&andVideo->codecCtx, andVideo->codecpar);
+        LOGD("成功打开视频解码器.\n");
     }
 
     // 回调java层函数，可以将一些状态回调到java层  使用子线程

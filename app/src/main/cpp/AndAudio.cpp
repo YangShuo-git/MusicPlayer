@@ -93,11 +93,11 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * handler)
     AndAudio *andAudio = (AndAudio *) handler;
     if(andAudio != NULL) {
         // 喇叭配置 44100 2 2   数据量则有 44100*2*2 个字节  要1s播放完
-        // int bufferSize = vAudio->resampleAudio();   // 未经soundTouch处理的pcm数据大小
+//         int bufferSize = andAudio->resampleAudio();   // 未经soundTouch处理的pcm数据大小
         int bufferSize = andAudio->getSoundTouchData();  // 经过soundTouch处理的pcm数据大小
         if(bufferSize > 0)
         {
-            // vAudio->clock 永远大于 pts
+            // andAudio->clock 永远大于 pts
             // bufferSize * 单位采样点的时间
             andAudio->clock += bufferSize / ((double)(andAudio->sample_rate * 2 * 2));
             if(andAudio->clock - andAudio->last_time >= 0.1){
@@ -106,7 +106,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * handler)
             }
 
             // 音频的数据送往喇叭
-            // (*vAudio->pcmBufferQueue)->Enqueue(vAudio->pcmBufferQueue, vAudio->outBuffer, bufferSize);  // 未经soundTouch处理的pcm数据
+//             (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, andAudio->outBuffer, bufferSize);  // 未经soundTouch处理的pcm数据
              (*andAudio->pcmBufferQueue)->Enqueue(andAudio->pcmBufferQueue, (char *)andAudio->sampleBuffer, bufferSize*2*2);
         }
     }
@@ -118,8 +118,6 @@ int AndAudio::resampleAudio(void **pcmBuf) {
     while(playStatus != NULL && !playStatus->exit)
     {
         avPacket = av_packet_alloc();
-        avFrame = av_frame_alloc();
-
         if(queue->getAvpacket(avPacket) != 0)
         {
             // 释放3步曲
@@ -137,11 +135,12 @@ int AndAudio::resampleAudio(void **pcmBuf) {
             avPacket = NULL;
             continue;
         }
+        avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(codecCtx, avFrame);
         if(ret == 0) {
             // 转换器上下文
             SwrContext *swr_ctx = NULL;
-            // 设值输入参数 和 输出参数  （swr_alloc_set_opts 通道布局、采样格式、采样率）
+            // 设值输入参数 和 输出参数   （通道布局、采样格式、采样率）
             swr_ctx = swr_alloc_set_opts(NULL,
                     AV_CH_LAYOUT_STEREO,AV_SAMPLE_FMT_S16,avFrame->sample_rate,
                     avFrame->channel_layout,(AVSampleFormat) avFrame->format,avFrame->sample_rate,
@@ -151,17 +150,15 @@ int AndAudio::resampleAudio(void **pcmBuf) {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket = NULL;
-
                 av_frame_free(&avFrame);
                 av_free(avFrame);
                 avFrame = NULL;
-
                 swr_free(&swr_ctx);
                 continue;
             }
 
             // 开始转换 swr_convert  将一帧pcm转入outBuffer中
-            int nb = swr_convert(swr_ctx,
+            nb = swr_convert(swr_ctx,
                     &outBuffer,avFrame->nb_samples,
                     (const uint8_t **) avFrame->data,avFrame->nb_samples);
             int out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
@@ -355,16 +352,18 @@ void AndAudio::setMute(int mute) {
 
 // 获取整理之后的波形  倍速 波形变小；慢放 波形变大
 int AndAudio::getSoundTouchData() {
-    //我们先取数据 pcm就在outbuffer
+    //我们先取数据 pcm就在out_buffer
     while(playStatus != NULL && !playStatus->exit){
         LOGE("------------------循环---------------------------finished %d",finished)
         out_buffer = NULL;
-        if(finished){
+        if(finished)
+        {
             // 开始整理波形，没有完成
             finished = false;
             // 从网络流 文件 读取数据 out_buffer  字节数量  out_buffer   是一个旧波
             data_size = this->resampleAudio(reinterpret_cast<void **>(&out_buffer));
-            if (data_size > 0) {  // 表示有波形
+            if (data_size > 0)  // 表示有波形
+            {
                 for(int i = 0; i < data_size / 2 + 1; i++){
                     // short  2个字节  pcm数据 因为是2声道，所以两个8位合成一个数据
                     sampleBuffer[i] = (out_buffer[i * 2] | ((out_buffer[i * 2 + 1]) << 8));
@@ -374,7 +373,8 @@ int AndAudio::getSoundTouchData() {
                 // 接受一个新波 sampleBuffer  返回值0表示继续整理波形  非0值表示新波形的大小
                 num = soundTouch->receiveSamples(sampleBuffer, data_size / 4);
                 LOGE("------------第一个num %d ", num);
-            }else{
+            }else
+            {
                 soundTouch->flush();
             }
         }
@@ -382,8 +382,10 @@ int AndAudio::getSoundTouchData() {
         if (num == 0) {
             finished = true;
             continue;
-        } else{
-            if(out_buffer == NULL){
+        } else
+        {
+            if(out_buffer == NULL)
+            {
                 num=soundTouch->receiveSamples(sampleBuffer, data_size / 4);
                 LOGE("------------第二个num %d ",num);
                 if(num == 0)

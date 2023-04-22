@@ -1,26 +1,15 @@
 package com.example.musicplayer;
 
-import static com.example.musicplayer.musicui.widget.DiscView.DURATION_NEEDLE_ANIAMTOR;
-import static com.example.musicplayer.service.MusicService.ACTION_OPT_MUSIC_VOLUME;
-
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
 import java.io.File;
@@ -29,13 +18,8 @@ import java.util.List;
 
 import com.example.musicplayer.lisnter.IPlayerListener;
 import com.example.musicplayer.lisnter.IOnPreparedListener;
-import com.example.musicplayer.musicui.model.MusicData;
-import com.example.musicplayer.musicui.utils.DisplayUtil;
-import com.example.musicplayer.musicui.widget.BackgourndAnimationRelativeLayout;
-import com.example.musicplayer.musicui.widget.DiscView;
 import com.example.musicplayer.opengl.AndGLSurfaceView;
 import com.example.musicplayer.service.AndPlayer;
-import com.example.musicplayer.service.MusicService;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -62,16 +46,16 @@ public class MainActivity extends AppCompatActivity {
 
         andPlayer = new AndPlayer();
         andPlayer.setAndGLSurfaceView(andGLSurfaceView);
-
-        File file = new File(Environment.getExternalStorageDirectory(),"input.mkv");
-        paths.add(file.getAbsolutePath());
-        file = new File(Environment.getExternalStorageDirectory(),"input.avi");
-        paths.add(file.getAbsolutePath());
+//
+//        File file = new File(Environment.getExternalStorageDirectory(),"input.mkv");
+//        paths.add(file.getAbsolutePath());
+//        file = new File(Environment.getExternalStorageDirectory(),"input.avi");
+//        paths.add(file.getAbsolutePath());
 
 //        file = new File(Environment.getExternalStorageDirectory(),"input.rmvb");
-        file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
+        File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
         paths.add(file.getAbsolutePath());
-        paths.add("http://mn.maliuedu.com/music/input.mp4");
+//        paths.add("http://mn.maliuedu.com/music/input.mp4");
         andPlayer.setPlayerListener(new IPlayerListener() {
             @Override
             public void onLoad(boolean load) {
@@ -85,9 +69,9 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            seekBar.setProgress(currentTime* 100 / totalTime);
-                            tvTime.setText( DisplayUtil.secdsToDateFormat(currentTime)
-                                    + "/" + DisplayUtil.secdsToDateFormat( totalTime));
+//                            seekBar.setProgress(currentTime* 100 / totalTime);
+//                            tvTime.setText( DisplayUtil.secdsToDateFormat(currentTime)
+//                                    + "/" + DisplayUtil.secdsToDateFormat( totalTime));
                         }
                     });
 
@@ -122,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                position = progress * andPlayer.getDuration() / 100;
+//                position = progress * andPlayer.getDuration() / 100;
             }
 
             @Override
@@ -152,15 +136,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void begin(View view) {
-
         andPlayer.setOnPreparedListener(new IOnPreparedListener() {
             @Override
-            public void onParpared() {
-                MyLog.d("准备好了，可以开始播放声音了");
+            public void onPrepared() {
+//                MyLog.d("准备好了，可以开始播放声音了");
                 andPlayer.start();
             }
         });
-//音视频面试   30道 心里分析  切入点   步骤 
 //       File file = new File(Environment.getExternalStorageDirectory(),"input.rmvb");
         File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
 
@@ -171,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 //        wlPlayer.setSource("/mnt/shared/Other/testvideo/楚乔传第一集.mp4");
 //        andPlayer.setSource("/mnt/shared/Other/testvideo/屌丝男士.mov");
 //        wlPlayer.setSource("http://ngcdn004.cnr.cn/live/dszs/index12.m3u8");
-        andPlayer.parpared();
+        andPlayer.prepared();
     }
 
     public void pause(View view) {
@@ -180,14 +162,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void resume(View view) {
-        andPlayer.resume();
-    }
+//    public void resume(View view) {
+//        andPlayer.resume();
+//    }
 
 
-    public void stop(View view) {
-        andPlayer.stop();
-    }
+//    public void stop(View view) {
+//        andPlayer.stop();
+//    }
 
 
     public void next(View view) {
@@ -195,11 +177,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void speed1(View view) {
-        andPlayer.setSpeed(1.5f);
+//        andPlayer.setSpeed(1.5f);
 
     }
 
-    public void speed2(View view) {
-        andPlayer.setSpeed(2.0f);
-    }
+//    public void speed2(View view) {
+//        andPlayer.setSpeed(2.0f);
+//    }
 }

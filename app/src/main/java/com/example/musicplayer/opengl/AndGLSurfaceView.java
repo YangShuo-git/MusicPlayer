@@ -6,7 +6,6 @@ import android.util.AttributeSet;
 
 public class AndGLSurfaceView extends GLSurfaceView {
     private AndRender andRender;
-
     public AndGLSurfaceView(Context context) {
         this(context, null);
     }
