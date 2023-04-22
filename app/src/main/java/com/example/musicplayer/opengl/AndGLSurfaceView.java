@@ -6,10 +6,7 @@ import android.util.AttributeSet;
 
 public class AndGLSurfaceView extends GLSurfaceView {
     private AndRender andRender;
-    public AndGLSurfaceView(Context context) {
-        this(context, null);
-    }
-
+    public AndGLSurfaceView(Context context) { super(context); }
     public AndGLSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setEGLContextClientVersion(2);
@@ -17,7 +14,6 @@ public class AndGLSurfaceView extends GLSurfaceView {
         setRenderer(andRender);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
-
     public void setYUVData(int width, int height, byte[] y, byte[] u, byte[] v)
     {
         if (andRender != null) {

@@ -45,6 +45,7 @@ public:
 
     void play();
     void pause();
+    void resume();
 
     double getDelayTime(double diff);
     double getFrameDiffTime(AVFrame *avFrame);

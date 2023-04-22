@@ -52,7 +52,10 @@ JNIEXPORT void JNICALL
 Java_com_example_musicplayer_service_AndPlayer_n_1pause(JNIEnv *env, jobject thiz) {
     if(ffmpeg != NULL)
     {
-        ffmpeg->pause();
+        if (!playStatus->pause)
+        {
+            ffmpeg->pause();
+        }
     }
 }
 extern "C"
@@ -84,4 +87,20 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_musicplayer_service_AndPlayer_n_1volume(JNIEnv *env, jobject thiz, jint percent) {
     // TODO: implement n_volume()
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_musicplayer_service_AndPlayer_n_1speed(JNIEnv *env, jobject thiz, jfloat speed) {
+    if (ffmpeg != NULL)
+    {
+        ffmpeg->setSpeed(speed);
+    }
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_musicplayer_service_AndPlayer_n_1setTone(JNIEnv *env, jobject thiz, jfloat tone) {
+    if (ffmpeg != NULL)
+    {
+        ffmpeg->setTone(tone);
+    }
 }

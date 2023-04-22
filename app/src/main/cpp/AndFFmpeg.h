@@ -53,6 +53,10 @@ public:
     void resume();
 
     void setMute(jint i);
+
+    void setSpeed(float speed);
+
+    void setTone(float tone);
 };
 
 

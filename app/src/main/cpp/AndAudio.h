@@ -78,9 +78,8 @@ public:
     //立体声
     int mute = 2;
 
-    // 倍速
-    float speed = 1.0f;
-    float pitch = 1.0f;
+    float speed = 1.0f; // 变速
+    float pitch = 1.0f; // 变调
 
     SoundTouch *soundTouch = NULL;
     // 新的缓冲区  喂给soundTouch
@@ -97,10 +96,11 @@ public:
 public:
     AndAudio(AndPlayStatus *playstatus, int sample_rate, AndCallJava *callJava);
 
-    // 解码函数
-    int resampleAudio(void **pcmBuf);
-
     int getCurrentSampleRateForOpensles(int sample_rate);
+
+    int resampleAudio(void **pcmBuf);  // 解码
+
+    int getSoundTouchData();
 
     void initOpenSLES();
 
@@ -114,7 +114,9 @@ public:
 
     void setMute(int mute);
 
-    int getSoundTouchData();
+    void setSpeed(float speed);
+
+    void setTone(float tone);
 };
 
 

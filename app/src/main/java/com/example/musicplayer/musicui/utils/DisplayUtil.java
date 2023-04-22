@@ -46,12 +46,10 @@ public class DisplayUtil {
     public static int getScreenWidth(Context context) {
         return context.getResources().getDisplayMetrics().widthPixels;
     }
-
     /*设备屏幕高度*/
     public static int getScreenHeight(Context context) {
         return context.getResources().getDisplayMetrics().heightPixels;
     }
-
     /*设置透明状态栏*/
     public static  void makeStatusBarTransparent(Activity context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -71,8 +69,6 @@ public class DisplayUtil {
         int sec = duration / 1000 % 60;
         return (min < 10 ? "0" + min : min + "") + ":" + (sec < 10 ? "0" + sec : sec + "");
     }
-
-
     public void try2UpdateMusicPicBackground(Activity activity, BackgourndAnimationRelativeLayout mRootLayout, final int musicPicRes) {
         if (mRootLayout.isNeed2UpdateBackground(musicPicRes)) {
             new Thread(new Runnable() {
@@ -114,7 +110,6 @@ public class DisplayUtil {
         foregroundDrawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
         return foregroundDrawable;
     }
-
     private Bitmap getForegroundBitmap(Context context, int musicPicRes) {
         int screenWidth = DisplayUtil.getScreenWidth(context);
         int screenHeight = DisplayUtil.getScreenHeight(context);
@@ -145,6 +140,38 @@ public class DisplayUtil {
         options.inPreferredConfig = Bitmap.Config.RGB_565;
 
         return BitmapFactory.decodeResource(context.getResources(), musicPicRes, options);
+    }
+    public static String secdsToDateFormat(int secds ) {
+        long hours = secds / (60 * 60);
+        long minutes = (secds % (60 * 60)) / (60);
+        long seconds = secds % (60);
+
+        String sh = "00";
+        if (hours > 0) {
+            if (hours < 10) {
+                sh = "0" + hours;
+            } else {
+                sh = hours + "";
+            }
+        }
+        String sm = "00";
+        if (minutes > 0) {
+            if (minutes < 10) {
+                sm = "0" + minutes;
+            } else {
+                sm = minutes + "";
+            }
+        }
+
+        String ss = "00";
+        if (seconds > 0) {
+            if (seconds < 10) {
+                ss = "0" + seconds;
+            } else {
+                ss = seconds + "";
+            }
+        }
+        return sm + ":" + ss;
     }
     public static String secdsToDateFormat(int secds, int totalsecds) {
         long hours = secds / (60 * 60);
@@ -181,7 +208,6 @@ public class DisplayUtil {
             return sh + ":" + sm + ":" + ss;
         }
         return sm + ":" + ss;
-
     }
 
 }

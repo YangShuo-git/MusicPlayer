@@ -34,6 +34,10 @@ public:
     int getQueueSize();
 
     void clearAvpacket();
+
+    void lock();
+
+    void unlock();
 };
 
 

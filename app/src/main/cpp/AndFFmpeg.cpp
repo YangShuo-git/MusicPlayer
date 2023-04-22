@@ -26,6 +26,7 @@ void AndFFmpeg::prepared() {
     pthread_create(&demuxThead, NULL, demuxFFmpeg, this);
 }
 
+// 打开解码器
 int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecpar) {
     /* ************************ 打开解码器4步曲 ************************ */
     *codecCtx = avcodec_alloc_context3(NULL);
@@ -64,7 +65,7 @@ int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecp
     return 0;
 }
 
-
+// 解封装
 int AndFFmpeg::demuxFFmpegThead() {
     pthread_mutex_lock(&init_mutex);
     // 初始化网络库
@@ -120,19 +121,20 @@ int AndFFmpeg::demuxFFmpegThead() {
         openDecoder(&andVideo->codecCtx, andVideo->codecpar);
         LOGD("成功打开视频解码器.\n");
     }
+    pthread_mutex_unlock(&init_mutex);
 
     // 回调java层函数，可以将一些状态回调到java层  使用子线程
-    // prepared()结束，就调用onCallPrepared()
+    // 调用java层的onCallPrepared()
     callJava->onCallPrepared(CHILD_THREAD);
-    pthread_mutex_unlock(&init_mutex);
 
     return 0;
 }
 
+// 解码
 int AndFFmpeg::start() {
     if(andAudio == NULL) {
         if(LOG_DEBUG) {
-            LOGE("vAudio is null");
+            LOGE("andAudio is null");
             return -1;
         }
     }
@@ -144,6 +146,10 @@ int AndFFmpeg::start() {
     while(playStatus != NULL && !playStatus->exit)
     {
         if(playStatus->seek){
+            continue;
+        }
+        if(playStatus->pause){
+            av_usleep(500*1000); // 休眠500ms
             continue;
         }
         // 放入队列  40这个值可以设大一点
@@ -158,7 +164,7 @@ int AndFFmpeg::start() {
             if(avPacket->stream_index == andAudio->streamIndex)
             {
                 andAudio->queue->putAvpacket(avPacket);
-            } else if (avPacket->stream_index == andAudio->streamIndex)
+            } else if (avPacket->stream_index == andVideo->streamIndex)
             {
                 andVideo->queue->putAvpacket(avPacket);
             } else
@@ -198,40 +204,57 @@ int AndFFmpeg::start() {
 }
 
 void AndFFmpeg::pause() {
+    playStatus->pause = true;
+    playStatus->seek = false;
+    playStatus->play = false;
     if(andAudio != NULL)
     {
         andAudio->pause();
     }
-}
-
-
-void AndFFmpeg::seek(jint secds) {
-    if (duration <= 0) {
-        return;
-    }
-
-    if (secds >= 0 && secds <= duration) {
-        pthread_mutex_lock(&seek_mutex);
-        if (andAudio != NULL) {
-            playStatus->seek = true;
-            andAudio->queue->clearAvpacket();
-            andAudio->clock = 0;
-            andAudio->last_time = 0;
-
-            // s    *  us
-            int64_t rel = secds * AV_TIME_BASE;
-            avformat_seek_file(formatCtx, -1, INT64_MIN, rel, INT64_MAX, 0);
-
-            playStatus->seek = false;
-        }
-        pthread_mutex_unlock(&seek_mutex);
+    if(andVideo != NULL)
+    {
+        andVideo->pause();
     }
 }
 
 void AndFFmpeg::resume() {
+    playStatus->pause = false;
+    playStatus->seek = false;
+    playStatus->play = true;
+
     if(andAudio != NULL)
     {
         andAudio->resume();
+    }
+    if(andVideo != NULL)
+    {
+        andVideo->resume();
+    }
+}
+
+void AndFFmpeg::seek(jint secds) {
+    if (duration <= 0)
+    {
+        return;
+    }
+
+    if (secds >= 0 && secds <= duration)
+    {
+        pthread_mutex_lock(&seek_mutex);
+        playStatus->seek = true;
+        int64_t rel = secds * AV_TIME_BASE;  // s    *  us
+        // seek 是调用ffmpeg的avformat_seek_file
+        avformat_seek_file(formatCtx, -1, INT64_MIN, rel, INT64_MAX, 0);
+        if (andAudio != NULL) {
+            andAudio->queue->clearAvpacket();
+            andAudio->clock = 0;
+            andAudio->last_time = 0;
+        }
+        if (andVideo != NULL) {
+            andVideo->queue->clearAvpacket();
+        }
+        playStatus->seek = false;
+        pthread_mutex_unlock(&seek_mutex);
     }
 }
 
@@ -239,6 +262,20 @@ void AndFFmpeg::setMute(jint mute) {
     if(andAudio != NULL)
     {
         andAudio->setMute(mute);
+    }
+}
+
+void AndFFmpeg::setSpeed(float speed) {
+    if(andAudio != NULL)
+    {
+        andAudio->setSpeed(speed);
+    }
+}
+
+void AndFFmpeg::setTone(float tone) {
+    if(andAudio != NULL)
+    {
+        andAudio->setTone(tone);
     }
 }
 

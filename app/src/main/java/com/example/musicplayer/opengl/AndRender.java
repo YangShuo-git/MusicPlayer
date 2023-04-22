@@ -3,6 +3,7 @@ package com.example.musicplayer.opengl;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -109,12 +110,10 @@ public class AndRender implements GLSurfaceView.Renderer{
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         initRenderYUV();
     }
-
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
 
     }
-
     // requestRender(); onDrawFrame  不断被调用  onDraw()
     @Override
     public void onDrawFrame(GL10 gl) {

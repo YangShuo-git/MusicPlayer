@@ -71,3 +71,11 @@ void AndQueue::clearAvpacket() {
     }
     pthread_mutex_unlock(&mutexPacket);
 }
+
+void AndQueue::lock() {
+    pthread_mutex_lock(&mutexPacket);
+}
+
+void AndQueue::unlock() {
+    pthread_mutex_unlock(&mutexPacket);
+}

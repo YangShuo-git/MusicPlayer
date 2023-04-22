@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.musicplayer.musicui.utils.DisplayUtil;
 import com.example.musicplayer.lisnter.IPlayerListener;
 import com.example.musicplayer.lisnter.IOnPreparedListener;
 import com.example.musicplayer.opengl.AndGLSurfaceView;
@@ -47,13 +48,14 @@ public class MainActivity extends AppCompatActivity {
         andPlayer = new AndPlayer();
         andPlayer.setAndGLSurfaceView(andGLSurfaceView);
 //
-//        File file = new File(Environment.getExternalStorageDirectory(),"input.mkv");
-//        paths.add(file.getAbsolutePath());
+        File file = new File(Environment.getExternalStorageDirectory(),"input.mkv");
+        paths.add(file.getAbsolutePath());
 //        file = new File(Environment.getExternalStorageDirectory(),"input.avi");
 //        paths.add(file.getAbsolutePath());
 
 //        file = new File(Environment.getExternalStorageDirectory(),"input.rmvb");
-        File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
+//        file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
+        file = new File(Environment.getExternalStorageDirectory(),"brave_960x540.flv");
         paths.add(file.getAbsolutePath());
 //        paths.add("http://mn.maliuedu.com/music/input.mp4");
         andPlayer.setPlayerListener(new IPlayerListener() {
@@ -61,42 +63,37 @@ public class MainActivity extends AppCompatActivity {
             public void onLoad(boolean load) {
 
             }
-
             @Override
             public void onCurrentTime(int currentTime, int totalTime) {
-                if(!seek &&totalTime> 0)
+                // seek 需要当前时间、总时间
+                if(!seek && totalTime > 0)
                 {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-//                            seekBar.setProgress(currentTime* 100 / totalTime);
-//                            tvTime.setText( DisplayUtil.secdsToDateFormat(currentTime)
-//                                    + "/" + DisplayUtil.secdsToDateFormat( totalTime));
+                            seekBar.setProgress(currentTime * 100 / totalTime);
+                            tvTime.setText( DisplayUtil.secdsToDateFormat(currentTime)
+                                    + "/" + DisplayUtil.secdsToDateFormat(totalTime));
                         }
                     });
-
                 }
             }
             @Override
             public void onError(int code, String msg) {
 
             }
-
             @Override
             public void onPause(boolean pause) {
 
             }
-
             @Override
             public void onDbValue(int db) {
 
             }
-
             @Override
             public void onComplete() {
 
             }
-
             @Override
             public String onNext() {
                 return null;
@@ -106,21 +103,18 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                position = progress * andPlayer.getDuration() / 100;
+                position = progress * andPlayer.getDuration() / 100;
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 seek = true;
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 andPlayer.seek(position);
                 seek = false;
             }
         });
-
     }
 
     public boolean checkPermission() {
@@ -135,16 +129,20 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * 播放控制：开始 停止 暂停 恢复 切换
+     */
     public void begin(View view) {
         andPlayer.setOnPreparedListener(new IOnPreparedListener() {
             @Override
             public void onPrepared() {
-//                MyLog.d("准备好了，可以开始播放声音了");
-                andPlayer.start();
+                andPlayer.start();  // 监听到Prepared()完成，就开始解码
             }
         });
 //       File file = new File(Environment.getExternalStorageDirectory(),"input.rmvb");
-        File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
+//        File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
+        File file = new File(Environment.getExternalStorageDirectory(),"brave_960x540.flv");
+
 
         andPlayer.setSource(file.getAbsolutePath());
 //       andPlayer.setSource("rtmp://58.200.131.2:1935/livetv/cctv1");
@@ -155,33 +153,34 @@ public class MainActivity extends AppCompatActivity {
 //        wlPlayer.setSource("http://ngcdn004.cnr.cn/live/dszs/index12.m3u8");
         andPlayer.prepared();
     }
-
     public void pause(View view) {
-
         andPlayer.pause();
-
     }
-
-//    public void resume(View view) {
-//        andPlayer.resume();
-//    }
-
-
-//    public void stop(View view) {
-//        andPlayer.stop();
-//    }
-
-
+    public void resume(View view) {
+        andPlayer.resume();
+    }
+    public void stop(View view) {
+        andPlayer.stop();
+    }
     public void next(View view) {
         //wlPlayer.playNext("/mnt/shared/Other/testvideo/楚乔传第一集.mp4");
     }
-
-    public void speed1(View view) {
-//        andPlayer.setSpeed(1.5f);
-
+    public void speed0(View view) {
+        andPlayer.setSpeed(1.0f);
     }
-
-//    public void speed2(View view) {
-//        andPlayer.setSpeed(2.0f);
-//    }
+    public void speed1(View view) {
+        andPlayer.setSpeed(1.5f);
+    }
+    public void speed2(View view) {
+        andPlayer.setSpeed(2.0f);
+    }
+    public void normalTone(View view) {
+        andPlayer.setTone(1.0f);
+    }
+    public void highTone(View view) {
+        andPlayer.setTone(2.0f);
+    }
+    public void lowTone(View view) {
+        andPlayer.setTone(0.5f);
+    }
 }

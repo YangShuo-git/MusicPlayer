@@ -19,7 +19,7 @@ void * playVideo(void *handler)
     //  死循环轮训
     while(andVideo->playStatus != NULL && !andVideo->playStatus->exit)
     {
-        // 解码 seek   puase   队列没有数据
+        // 解码 seek puase  队列没有数据
         if(andVideo->playStatus->seek)
         {
             av_usleep(1000 * 100);
@@ -41,6 +41,8 @@ void * playVideo(void *handler)
             }
         }
 
+        // 视频解码 比较耗时  多线程 需要加锁
+        pthread_mutex_lock(&andVideo->codecMutex);
         AVPacket *avPacket = av_packet_alloc();
         if(andVideo->queue->getAvpacket(avPacket) != 0)
         {
@@ -49,8 +51,6 @@ void * playVideo(void *handler)
             avPacket = NULL;
             continue;
         }
-        // 视频解码 比较耗时  多线程
-        pthread_mutex_lock(&andVideo->codecMutex);
         // 解码操作
         if(avcodec_send_packet(andVideo->codecCtx, avPacket) != 0)
         {
@@ -73,7 +73,7 @@ void * playVideo(void *handler)
             pthread_mutex_unlock(&andVideo->codecMutex);
             continue;
         }
-
+        pthread_mutex_unlock(&andVideo->codecMutex);
         // 解码成功 回调送去渲染
         if(avFrame->format == AV_PIX_FMT_YUV420P)
         {
@@ -91,8 +91,9 @@ void * playVideo(void *handler)
                     avFrame->data[0],
                     avFrame->data[1],
                     avFrame->data[2]);
-        }else{
-            LOGE("当前视频不是YUV420P格式");
+        } else
+        {
+            LOGE("当前视频不是YUV420P格式");  // 就要使用转换器将视频格式转为YUV420P
             AVFrame *pFrameYUV420P = av_frame_alloc();
             int num = av_image_get_buffer_size(
                     AV_PIX_FMT_YUV420P,
@@ -230,5 +231,9 @@ double AndVideo::getDelayTime(double diff) {
 }
 
 void AndVideo::pause() {
+    queue->lock();
+}
 
+void AndVideo::resume() {
+    queue->unlock();
 }

@@ -286,6 +286,7 @@ void AndAudio::initOpenSLES() {
 
 // 有关音频播放的相关操作，都在OpenSL ES的操作接口中
 void AndAudio::pause() {
+    queue->lock();
     if(pcmPlayerPlay != NULL)
     {
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PAUSED);
@@ -293,9 +294,9 @@ void AndAudio::pause() {
 }
 
 void AndAudio::resume() {
+    queue->unlock();
     if(pcmPlayerPlay != NULL)
     {
-
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
     }
 }
@@ -354,7 +355,7 @@ void AndAudio::setMute(int mute) {
 int AndAudio::getSoundTouchData() {
     //我们先取数据 pcm就在out_buffer
     while(playStatus != NULL && !playStatus->exit){
-        LOGE("------------------循环---------------------------finished %d",finished)
+//        LOGE("------------------循环获取音频数据---------------------------finished %d",finished)
         out_buffer = NULL;
         if(finished)
         {
@@ -372,7 +373,7 @@ int AndAudio::getSoundTouchData() {
                 soundTouch->putSamples(sampleBuffer, nb);
                 // 接受一个新波 sampleBuffer  返回值0表示继续整理波形  非0值表示新波形的大小
                 num = soundTouch->receiveSamples(sampleBuffer, data_size / 4);
-                LOGE("------------第一个num %d ", num);
+//                LOGE("------------第一个num %d ", num);
             }else
             {
                 soundTouch->flush();
@@ -387,18 +388,30 @@ int AndAudio::getSoundTouchData() {
             if(out_buffer == NULL)
             {
                 num=soundTouch->receiveSamples(sampleBuffer, data_size / 4);
-                LOGE("------------第二个num %d ",num);
+//                LOGE("------------第二个num %d ",num);
                 if(num == 0)
                 {
                     finished = true;
                     continue;
                 }
             }
-            LOGE("---------------- 结束1 -----------------------")
             return num;
         }
 
     }
-    LOGE("---------------- 结束2 -----------------------")
     return 0;
+}
+
+void AndAudio::setSpeed(float speed) {
+    this->speed = speed;
+    if (soundTouch != NULL) {
+        soundTouch->setTempo(speed);
+    }
+}
+
+void AndAudio::setTone(float tone) {
+    this->speed = speed;
+    if (soundTouch != NULL) {
+        soundTouch->setPitch(tone);
+    }
 }
