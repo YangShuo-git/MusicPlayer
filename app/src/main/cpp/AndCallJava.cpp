@@ -45,7 +45,7 @@ void AndCallJava::onCallTimeInfo(int type, int curr, int total) {
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
             if (LOG_DEBUG) {
-                LOGE("call onCallTimeInfo worng");
+                LOGE("Fail to call onCallTimeInfo!");
             }
             return;
         }
@@ -67,7 +67,7 @@ void AndCallJava::onCallLoad(int type, bool load) {
         {
             if(LOG_DEBUG)
             {
-                LOGE("call onCallLoad worng");
+                LOGE("Fail to call onCallLoad!");
             }
             return;
         }
@@ -83,7 +83,7 @@ void AndCallJava::onCallRenderYUV(int width, int height, uint8_t *fy, uint8_t *f
     {
         if(LOG_DEBUG)
         {
-            LOGE("call onCallComplete worng");
+            LOGE("Fail to call onCallRenderYUV!");
         }
         return;
     }

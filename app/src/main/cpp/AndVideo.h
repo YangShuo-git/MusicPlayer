@@ -33,11 +33,14 @@ public:
     AVCodecParameters *codecpar = NULL;
 
     double clock = 0;
-    // 实时计算出来   主要与音频的差值
+    // 实时计算出来 视频延迟时间
     double delayTime = 0;
-    // 默认休眠时间   40ms  0.04s    帧率 25帧
+    // 默认延迟时间  若帧率是25，则为40ms; 30，则为33ms
     double defaultDelayTime = 0.04;
     AVRational time_base;
+    // 同步阈值  音视频pts的差值与该阈值进行对比，再去决定是否同步
+    double SyncThreshold = 0.003;
+
 
 public:
     AndVideo(AndPlayStatus *playStatus, AndCallJava *callJava);
@@ -47,8 +50,8 @@ public:
     void pause();
     void resume();
 
-    double getDelayTime(double diff);
     double getFrameDiffTime(AVFrame *avFrame);
+    double getDelayTime(double diff);
 };
 
 #endif //MUSICPLAYER_ANDVIDEO_H

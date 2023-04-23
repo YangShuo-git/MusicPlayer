@@ -142,15 +142,9 @@ public class MainActivity extends AppCompatActivity {
 //       File file = new File(Environment.getExternalStorageDirectory(),"input.rmvb");
 //        File file = new File(Environment.getExternalStorageDirectory(),"input.mp4");
         File file = new File(Environment.getExternalStorageDirectory(),"brave_960x540.flv");
-
-
         andPlayer.setSource(file.getAbsolutePath());
-//       andPlayer.setSource("rtmp://58.200.131.2:1935/livetv/cctv1");
-//        andPlayer.setSource("http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8");
-//        andPlayer.setSource("http://mn.maliuedu.com/music/input.mp4");
-//        wlPlayer.setSource("/mnt/shared/Other/testvideo/楚乔传第一集.mp4");
-//        andPlayer.setSource("/mnt/shared/Other/testvideo/屌丝男士.mov");
-//        wlPlayer.setSource("http://ngcdn004.cnr.cn/live/dszs/index12.m3u8");
+
+//        andPlayer.setSource("http://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/flv/xgplayer-demo-360p.flv");
         andPlayer.prepared();
     }
     public void pause(View view) {

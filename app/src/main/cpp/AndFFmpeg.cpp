@@ -96,14 +96,26 @@ int AndFFmpeg::demuxFFmpegThead() {
                 andAudio->time_base = formatCtx->streams[i]->time_base;
                 andAudio->duration = formatCtx->duration / AV_TIME_BASE;
                 duration = andAudio->duration;
-                LOGD("成功找到音频流.\n");
+                LOGD("andAudio->time_base  den: %d\n", andAudio->time_base.den);
+                LOGD("Found audio stream!\n");
             }
         } else if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             if (andVideo == NULL) {
                 andVideo = new AndVideo(playStatus, callJava);
                 andVideo->streamIndex = i;
                 andVideo->codecpar = formatCtx->streams[i]->codecpar;
-                LOGD("成功找到视频流.\n");
+
+                andVideo->time_base = formatCtx->streams[i]->time_base;
+                LOGD("andVideo->time_base  den: %d\n", andVideo->time_base.den);
+                int num = formatCtx->streams[i]->avg_frame_rate.num;
+                int den = formatCtx->streams[i]->avg_frame_rate.den;
+                if (num != 0 && den != 0)
+                {
+                    int fps = num / den;  // 计算视频的帧率
+                    andVideo->defaultDelayTime = 1.0 / fps;  // 音视频同步时，视频的延迟时间
+                }
+                andVideo->delayTime = andVideo->defaultDelayTime;
+                LOGD("Found video stream! %f\n", andVideo->defaultDelayTime);
             }
         }
     }

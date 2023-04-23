@@ -74,17 +74,16 @@ void * playVideo(void *handler)
             continue;
         }
         pthread_mutex_unlock(&andVideo->codecMutex);
-        // 解码成功 回调送去渲染
-        if(avFrame->format == AV_PIX_FMT_YUV420P)
-        {
-            LOGE("当前视频是YUV420P格式");
-            // avFrame->data[0]代表y，avFrame->data[1]代表u， avFrame->data[2]代表v
-            // 休眠33ms  不可取33 * 1000
-             av_usleep(33 * 1000);
 
-//            double diff = andVideo->getFrameDiffTime(avFrame);
-            // 通过diff 计算休眠时间
-//            av_usleep(andVideo->getDelayTime(diff) * 1000000);
+        // 解码成功 回调送去渲染
+        if(avFrame->format == AV_PIX_FMT_YUV420P)  // 当前视频是YUV420P格式
+        {
+            // avFrame->data[0]代表y，avFrame->data[1]代表u， avFrame->data[2]代表v
+            // av_usleep(33 * 1000);  // 不考虑同步的情况下  视频延迟33ms
+
+            double diff = andVideo->getFrameDiffTime(avFrame);
+            double delay = andVideo->getDelayTime(diff) * 1000000;
+            av_usleep(delay);
             andVideo->callJava->onCallRenderYUV(
                     andVideo->codecCtx->width,
                     andVideo->codecCtx->height,
@@ -93,7 +92,7 @@ void * playVideo(void *handler)
                     avFrame->data[2]);
         } else
         {
-            LOGE("当前视频不是YUV420P格式");  // 就要使用转换器将视频格式转为YUV420P
+             // 当前视频不是YUV420P格式，就要使用转换器将视频格式转为YUV420P
             AVFrame *pFrameYUV420P = av_frame_alloc();
             int num = av_image_get_buffer_size(
                     AV_PIX_FMT_YUV420P,
@@ -159,17 +158,25 @@ void AndVideo::play() {
     pthread_create(&thread_play, NULL, playVideo, this);
 }
 
+void AndVideo::pause() {
+    queue->lock();
+}
+
+void AndVideo::resume() {
+    queue->unlock();
+}
+
+// 计算音频与视频的pts差  根据pts差再去做调整（丢帧还是延迟播放）
 double AndVideo::getFrameDiffTime(AVFrame *avFrame) {
-    // 先获取视频时间戳  处理之后
+    // 获取视频的pts
     double pts = av_frame_get_best_effort_timestamp(avFrame);
     if(pts == AV_NOPTS_VALUE)
     {
         pts = 0;
     }
-//     1.001*40ms
-//    pts=pts * time_base.num / time_base.den;
-    pts *= av_q2d(time_base);
-
+    // time_base表示1个刻度有多大， pts表示有多少个刻度
+    // pts = pts * time_base.num / time_base.den; // 与下行等价
+    pts *= av_q2d(time_base);  // 单位是s
     if(pts > 0)
     {
         clock = pts;
@@ -179,61 +186,47 @@ double AndVideo::getFrameDiffTime(AVFrame *avFrame) {
     return diff;
 }
 
-// 33ms  -----》动态计算
+// 以30ms为基准 进行动态计算
+// 通过diff 计算视频延迟时间
 double AndVideo::getDelayTime(double diff) {
+    // diff>0: 音频快，则视频休眠时间要减小
+    // diff<0: 视频快，则视频休眠时间要增大
 
-//    返回秒数 3ms 以内
-//音频超越视频  3ms   1
+    //以(-0.003, 0.003)为门限阈值  在该区间内，则无需同步处理
+    if(diff > SyncThreshold) {
+        // 音频快，则减小视频延迟时间 减小为原来的2/3
+        delayTime = delayTime * 2 / 3;
 
-//视频超越  音频3ms   2
-    if(diff > 0.003) {
-//        视频休眠时间
-        delayTime = delayTime * 2 / 3;// * 3/2;
-        if (delayTime < defaultDelayTime / 2) {
-//            用户有所察觉
-            delayTime = defaultDelayTime * 2 / 3;
-        }else if(delayTime > defaultDelayTime * 2) {
+        // 减小后的值太大或者太小，也不合适，给出边界值  若defaultDelayTime=40，则(20, 80)
+        if (delayTime < defaultDelayTime / 2)
+        {
+            delayTime = defaultDelayTime / 2;
+        }else if(delayTime > defaultDelayTime * 2)
+        {
             delayTime = defaultDelayTime * 2;
         }
-    } else if(diff < - 0.003)
+    } else if(diff < -SyncThreshold)
     {
-//视频超前    休眠时间 相比于以前大一些
+        // 视频快 则增大视频延迟时间 增大为原来的3/2
         delayTime = delayTime * 3 / 2;
+
+        // 增大后的值太大或者太小，也不合适，给出边界值  若defaultDelayTime=40，则(20, 80)
         if(delayTime < defaultDelayTime / 2)
         {
-            delayTime = defaultDelayTime * 2 / 3;
+            delayTime = defaultDelayTime / 2;
         }
         else if(delayTime > defaultDelayTime * 2)
         {
             delayTime = defaultDelayTime * 2;
         }
     }
-//感觉的 视频加速
-    if (diff >= 0.5) {
-        delayTime = 0;
-    } else if(diff <= -0.5)
-    {
-        delayTime = defaultDelayTime * 2;
-    }
-//    音频太快了   视频怎么赶也赶不上        视频队列全部清空   直接解析最新的 最新鲜的
-    if(diff>= 10)
-    {
+
+    // 极端情况 音频太快了 视频怎么赶也赶不上  需要将视频队列全部清空，直接解析最新的
+    // 极端情况 视频太快了 音频赶不上 需要将音频队列全部清空，直接解析最新的
+    if (diff >= 5 || diff<= -5) {
         queue->clearAvpacket();
-        delayTime = defaultDelayTime;
-    }
-//视频太快了  音频赶不上
-    if (diff <= -10) {
         vAudio->queue->clearAvpacket();
         delayTime = defaultDelayTime;
-        LOGE("====================>视频太快了");
     }
     return delayTime;
-}
-
-void AndVideo::pause() {
-    queue->lock();
-}
-
-void AndVideo::resume() {
-    queue->unlock();
 }
