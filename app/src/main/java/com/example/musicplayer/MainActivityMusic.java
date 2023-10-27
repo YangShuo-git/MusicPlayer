@@ -35,17 +35,15 @@ import java.util.List;
 
 public class MainActivityMusic extends AppCompatActivity implements DiscView.IPlayInfo, View
         .OnClickListener {
-    private static final String TAG = "Activity";
+    private static final String TAG = "MainActivityMusic";
     private DiscView mDisc;
-    private Toolbar mToolbar;
     private SeekBar mSeekBar;
     private ImageView mIvPlayOrPause, mIvNext, mIvLast;
     private TextView mTvMusicDuration,mTvTotalMusicDuration;
     private BackgourndAnimationRelativeLayout mRootLayout;
-    public static final int MUSIC_MESSAGE = 0;
 
     public static final String PARAM_MUSIC_LIST = "PARAM_MUSIC_LIST";
-    DisplayUtil displayUtil = new DisplayUtil();
+    public DisplayUtil displayUtil = new DisplayUtil();
     private MusicReceiver mMusicReceiver = new MusicReceiver();
     private List<MusicData> mMusicDatas = new ArrayList<>();
     private int totalTime;
@@ -67,24 +65,11 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         setContentView(R.layout.activity_main_music);
         checkPermission();
 
-//        File file = new File(Environment.getExternalStorageDirectory(),"dngl.mp3");
-//
-//        AndPlayer andPlayer = new AndPlayer();
-//        andPlayer.setOnPreparedListener(new IOnPreparedListener() {
-//            @Override
-//            public void onPrepared() {
-//                Log.d("Activity", "回调成功：OnPrepared");
-//                andPlayer.start();
-//            }
-//        });
-//
-//        andPlayer.setSource(file.getAbsolutePath());
-//        andPlayer.prepared();
-
         initMusicDatas();
         initView();
         initMusicReceiver();
         DisplayUtil.makeStatusBarTransparent(this);
+
         new Thread() {
             @Override
             public void run() {
@@ -153,12 +138,13 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music1.mp3").getAbsolutePath());
         MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music2.mp3").getAbsolutePath());
         MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music3.mp3").getAbsolutePath());
-        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻", "三亩地");
+        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻111", "三亩地");
         MusicData musicData7 = new MusicData(R.raw.music2, R.raw.ic_music2, "Nightingale", "YANI");
         MusicData musicData8 = new MusicData(R.raw.music3, R.raw.ic_music3, "Cornfield Chase", "Hans Zimmer");
         mMusicDatas.add(musicData6);
         mMusicDatas.add(musicData7);
         mMusicDatas.add(musicData8);
+
         ArrayList<String> list = new ArrayList();
         list.add(musicData1.getMusicName());
         list.add(musicData2.getMusicName());
@@ -172,12 +158,10 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         getSupportActionBar().setTitle(musicName);
         getSupportActionBar().setSubtitle(musicAuthor);
     }
-
     @Override
     public void onMusicPicChanged(int musicPicRes) {
         displayUtil.try2UpdateMusicPicBackground(this,mRootLayout,musicPicRes);
     }
-
     @Override
     public void onMusicChanged(DiscView.MusicChangedStatus musicChangedStatus) {
         switch (musicChangedStatus) {
@@ -223,6 +207,11 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
             mDisc.last();
         }
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMusicReceiver);
+    }
 
     private void next() {
         mRootLayout.postDelayed(new Runnable() {
@@ -254,6 +243,8 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
     private void optMusic(final String action) {
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(action));
     }
+
+
     private void play() {
         optMusic(MusicService.ACTION_OPT_MUSIC_PLAY);
     }
@@ -274,6 +265,22 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
         mSeekBar.setProgress(0);
     }
+    public void left(View view) { optMusic(MusicService.ACTION_OPT_MUSIC_LEFT); }
+    public void right(View view) {
+        optMusic(MusicService.ACTION_OPT_MUSIC_RIGHT);
+    }
+    public void center(View view) {
+        optMusic(MusicService.ACTION_OPT_MUSIC_CENTER);
+    }
+    public void speed(View view) {
+    }
+    public void pitch(View view) {
+    }
+    public void speedpitch(View view) {
+    }
+    public void normalspeedpitch(View view) {
+    }
+
 
     class MusicReceiver extends BroadcastReceiver {
         @Override
@@ -302,26 +309,5 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
                 playCurrentTime(currentTime,totalTime);
             }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMusicReceiver);
-    }
-    public void left(View view) { optMusic(MusicService.ACTION_OPT_MUSIC_LEFT); }
-    public void right(View view) {
-        optMusic(MusicService.ACTION_OPT_MUSIC_RIGHT);
-    }
-    public void center(View view) {
-        optMusic(MusicService.ACTION_OPT_MUSIC_CENTER);
-    }
-    public void speed(View view) {
-    }
-    public void pitch(View view) {
-    }
-    public void speedpitch(View view) {
-    }
-    public void normalspeedpitch(View view) {
     }
 }

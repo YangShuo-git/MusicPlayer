@@ -111,7 +111,7 @@ public class AndPlayer {
     public void stop() {}
 
     /**
-     * java调用native层的接口
+     * native层接口
      */
     public native void n_prepared(String source);
     public native void n_start();

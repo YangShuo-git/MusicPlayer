@@ -23,7 +23,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private static final String TAG = "MusicService";
     private AndPlayer andPlayer;
     /*操作指令*/
-    /*操作指令*/
     public static final String ACTION_OPT_MUSIC_PLAY = "ACTION_OPT_MUSIC_PLAY";
     public static final String ACTION_OPT_MUSIC_PAUSE = "ACTION_OPT_MUSIC_PAUSE";
     public static final String ACTION_OPT_MUSIC_RESUME = "ACTION_OPT_MUSIC_RESUME";
@@ -127,7 +126,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMusicReceiver);
     }
 
-    // 监听
     private void play(final int index) {
         String path = mMusicDatas.get(index);
         andPlayer.setSource(path);
@@ -146,7 +144,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     }
 
-    // 出发点      postion    ffmpeg   做 seek
     private void seekTo(int position) {
         andPlayer.seek(position);
     }
