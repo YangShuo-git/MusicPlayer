@@ -5,11 +5,9 @@ import android.util.Log;
 
 import com.example.musicplayer.lisnter.IPlayerListener;
 import com.example.musicplayer.lisnter.IOnPreparedListener;
-import com.example.musicplayer.opengl.AndGLSurfaceView;
 
 public class AndPlayer {
     IOnPreparedListener onPreparedListener;
-    private AndGLSurfaceView andGLSfView;
     private IPlayerListener playerListener;
     private int duration = 0;  // 总时长
 
@@ -20,10 +18,6 @@ public class AndPlayer {
     public void setSource(String source)
     {
         this.source = source;
-    }
-    public void setAndGLSurfaceView(AndGLSurfaceView surfaceview) {
-        this.andGLSfView = surfaceview;
-        Log.i("AndPlayer", "setAndGLSurfaceView: -------------" + this.hashCode());
     }
 
     /**
@@ -37,7 +31,8 @@ public class AndPlayer {
     }
 
     /**
-     * 在Native层调用java的方法  回调的方式，应用层入口
+     * 1、C++调用java的方法
+     * onCallPrepared、onCallTimeInfo，这两个方法是在native层进行回调，所以java层没有显示usage;
      */
     public void onCallPrepared() {
         Log.d("AndPlayer", "onCallPrepared");
@@ -47,28 +42,17 @@ public class AndPlayer {
     }
     public void onCallTimeInfo(int currentTime, int totalTime)
     {
-        Log.d("AndPlayer", "onCallTimeInfo");
+//        Log.d("AndPlayer", "onCallTimeInfo");
         duration = totalTime;
         if (playerListener == null) {
             return;
         }
         playerListener.onCurrentTime(currentTime, totalTime);
     }
-    public void onCallRenderYUV(int width, int height, byte[] y, byte[] u, byte[] v)
-    {
-        Log.d("AndPlayer", "onCallParpared");
-        // opengl渲染  的java版本
-        if( this.andGLSfView != null)
-        {
-            this.andGLSfView.setYUVData(width, height, y, u, v);
-        }
-    }
-    public void onCallLoad(boolean load)
-    {
-//        队列 网络 有问题    加载框
-    }
 
-
+    /**
+     * 播放器的主要逻辑：perpared、start、pause、resume
+     */
     public void prepared()
     {
         if(TextUtils.isEmpty(source)) {
@@ -110,7 +94,9 @@ public class AndPlayer {
     public void setTone(float tone) { n_setTone(tone); }
     public void stop() {}
 
+
     /**
+     * 2、java调用C++的方法
      * native层接口
      */
     public native void n_prepared(String source);

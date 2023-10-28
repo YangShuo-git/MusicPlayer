@@ -28,11 +28,6 @@ public:
     AndCallJava(_JavaVM *javaVM, JNIEnv *env, jobject obj);
     void onCallPrepared(int type);
     void onCallTimeInfo(int type, int curr, int total);
-
-    //  状态是加载中
-    void onCallLoad(int type, bool load);
-    // 使用OpenGL 渲染yuv
-    void onCallRenderYUV(int width, int height, uint8_t *fy, uint8_t *fu, uint8_t *fv);
 };
 
 

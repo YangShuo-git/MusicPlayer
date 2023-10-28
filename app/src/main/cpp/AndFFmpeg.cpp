@@ -99,24 +99,6 @@ int AndFFmpeg::demuxFFmpegThead() {
                 LOGD("andAudio->time_base  den: %d\n", andAudio->time_base.den);
                 LOGD("Found audio stream!\n");
             }
-        } else if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            if (andVideo == NULL) {
-                andVideo = new AndVideo(playStatus, callJava);
-                andVideo->streamIndex = i;
-                andVideo->codecpar = formatCtx->streams[i]->codecpar;
-
-                andVideo->time_base = formatCtx->streams[i]->time_base;
-                LOGD("andVideo->time_base  den: %d\n", andVideo->time_base.den);
-                int num = formatCtx->streams[i]->avg_frame_rate.num;
-                int den = formatCtx->streams[i]->avg_frame_rate.den;
-                if (num != 0 && den != 0)
-                {
-                    int fps = num / den;  // 计算视频的帧率
-                    andVideo->defaultDelayTime = 1.0 / fps;  // 音视频同步时，视频的延迟时间
-                }
-                andVideo->delayTime = andVideo->defaultDelayTime;
-                LOGD("Found video stream! %f\n", andVideo->defaultDelayTime);
-            }
         }
     }
     if (andAudio->streamIndex == -1) {
@@ -129,14 +111,10 @@ int AndFFmpeg::demuxFFmpegThead() {
         openDecoder(&andAudio->codecCtx, andAudio->codecpar);
         LOGD("成功打开音频解码器.\n");
     }
-    if(andVideo != NULL){
-        openDecoder(&andVideo->codecCtx, andVideo->codecpar);
-        LOGD("成功打开视频解码器.\n");
-    }
     pthread_mutex_unlock(&init_mutex);
 
-    // 回调java层函数，可以将一些状态回调到java层  使用子线程
-    // 调用java层的onCallPrepared()
+    // C++调用java层的onCallPrepared()
+    // 这里是回调java层函数，可以将一些状态回调到java层  使用子线程
     callJava->onCallPrepared(CHILD_THREAD);
 
     return 0;
@@ -151,8 +129,6 @@ int AndFFmpeg::start() {
         }
     }
     andAudio->play();
-    andVideo->play();
-    andVideo->vAudio = andAudio;
 
     int count = 0;
     while(playStatus != NULL && !playStatus->exit)
@@ -161,11 +137,11 @@ int AndFFmpeg::start() {
             continue;
         }
         if(playStatus->pause){
-            av_usleep(500*1000); // 休眠500ms
+//            av_usleep(500*1000); // 休眠500ms
             continue;
         }
         // 放入队列  40这个值可以设大一点
-        if(andAudio->queue->getQueueSize() > 40 || andVideo->queue->getQueueSize() > 40){
+        if(andAudio->queue->getQueueSize() > 40){
             continue;
         }
 
@@ -176,11 +152,7 @@ int AndFFmpeg::start() {
             if(avPacket->stream_index == andAudio->streamIndex)
             {
                 andAudio->queue->putAvpacket(avPacket);
-            } else if (avPacket->stream_index == andVideo->streamIndex)
-            {
-                andVideo->queue->putAvpacket(avPacket);
-            } else
-            {
+            } else {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
             }
@@ -192,15 +164,6 @@ int AndFFmpeg::start() {
             //特殊情况
             while(playStatus != NULL && !playStatus->exit)
             {
-                if(andVideo->queue->getQueueSize() > 0)
-                {
-                    continue;
-                }
-                if(andVideo->queue->getQueueSize() > 0)
-                {
-                    continue;
-                }
-
                 playStatus->exit = true;
                 break;
             }
@@ -223,10 +186,6 @@ void AndFFmpeg::pause() {
     {
         andAudio->pause();
     }
-    if(andVideo != NULL)
-    {
-        andVideo->pause();
-    }
 }
 
 void AndFFmpeg::resume() {
@@ -237,10 +196,6 @@ void AndFFmpeg::resume() {
     if(andAudio != NULL)
     {
         andAudio->resume();
-    }
-    if(andVideo != NULL)
-    {
-        andVideo->resume();
     }
 }
 
@@ -261,9 +216,6 @@ void AndFFmpeg::seek(jint secds) {
             andAudio->queue->clearAvpacket();
             andAudio->clock = 0;
             andAudio->last_time = 0;
-        }
-        if (andVideo != NULL) {
-            andVideo->queue->clearAvpacket();
         }
         playStatus->seek = false;
         pthread_mutex_unlock(&seek_mutex);

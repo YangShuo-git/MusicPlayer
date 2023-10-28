@@ -6,7 +6,6 @@
 #define MUSICPLAYER_ANDFFMPEG_H
 
 #include "AndAudio.h"
-#include "AndVideo.h"
 #include "AndCallJava.h"
 #include "AndPlayStatus.h"
 
@@ -26,7 +25,6 @@ public:
     AVFormatContext *formatCtx = NULL;
 
     AndAudio *andAudio = NULL;
-    AndVideo *andVideo = NULL;
     AndCallJava *callJava = NULL;
     AndPlayStatus *playStatus = NULL;
 

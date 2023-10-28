@@ -143,7 +143,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void last() {
 
     }
-
     private void seekTo(int position) {
         andPlayer.seek(position);
     }
@@ -151,6 +150,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     @Override
     public void onCompletion(MediaPlayer mp) {
     }
+
     class MusicReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

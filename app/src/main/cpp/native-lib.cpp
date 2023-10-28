@@ -32,6 +32,7 @@ Java_com_example_musicplayer_service_AndPlayer_n_1prepared(JNIEnv *env, jobject 
             callJava = new AndCallJava(javaVM,env,thiz);
         }
         playStatus = new AndPlayStatus();
+
         ffmpeg = new AndFFmpeg(playStatus, callJava,source);
         ffmpeg->callJava = callJava;
         ffmpeg->prepared();

@@ -105,10 +105,14 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         mTvTotalMusicDuration = (TextView) findViewById(R.id.tvTotalTime);
         mSeekBar = (SeekBar) findViewById(R.id.musicSeekBar);
         mRootLayout = (BackgourndAnimationRelativeLayout) findViewById(R.id.rootLayout);
+
         mDisc.setPlayInfoListener(this);
-        mIvLast.setOnClickListener(this);
         mIvNext.setOnClickListener(this);
+        mIvLast.setOnClickListener(this);
         mIvPlayOrPause.setOnClickListener(this);
+        mTvMusicDuration.setText(displayUtil.duration2Time(0));
+        mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
+        mDisc.setMusicDataList(mMusicDatas);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -124,9 +128,6 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
                 seekTo(position);
             }
         });
-        mTvMusicDuration.setText(displayUtil.duration2Time(0));
-        mTvTotalMusicDuration.setText(displayUtil.duration2Time(0));
-        mDisc.setMusicDataList(mMusicDatas);
     }
     private void playCurrentTime(int currentTime, int totalTime) {
         mSeekBar.setProgress(currentTime*100/totalTime);
@@ -138,7 +139,7 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music1.mp3").getAbsolutePath());
         MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music2.mp3").getAbsolutePath());
         MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music3.mp3").getAbsolutePath());
-        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻111", "三亩地");
+        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻", "三亩地");
         MusicData musicData7 = new MusicData(R.raw.music2, R.raw.ic_music2, "Nightingale", "YANI");
         MusicData musicData8 = new MusicData(R.raw.music3, R.raw.ic_music3, "Cornfield Chase", "Hans Zimmer");
         mMusicDatas.add(musicData6);
@@ -149,6 +150,7 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         list.add(musicData1.getMusicName());
         list.add(musicData2.getMusicName());
         list.add(musicData3.getMusicName());
+
         Intent intent = new Intent(this, MusicService.class);
         intent.putStringArrayListExtra(PARAM_MUSIC_LIST, list);
         startService(intent);
@@ -196,7 +198,7 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
                 mIvPlayOrPause.setImageResource(R.drawable.ic_play);
                 pause();
                 mDisc.stop();
-            }else {
+            } else {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_pause);
                 resume();
                 mDisc.play();
