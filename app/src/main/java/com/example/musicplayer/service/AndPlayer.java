@@ -31,7 +31,7 @@ public class AndPlayer {
     }
 
     /**
-     * 1、C++调用java的方法
+     * 1、C++调用java
      * onCallPrepared、onCallTimeInfo，这两个方法是在native层进行回调，所以java层没有显示usage;
      */
     public void onCallPrepared() {
