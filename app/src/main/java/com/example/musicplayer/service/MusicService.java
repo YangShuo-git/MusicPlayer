@@ -155,11 +155,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.i(TAG, "onReceive: " + action);
+//            Log.i(TAG, "onReceive: " + action);
             if (action.equals(ACTION_OPT_MUSIC_PLAY)) {
                 play(mCurrentMusicIndex);
             }
-
             else if (action.equals(ACTION_OPT_MUSIC_LAST)) {
                 last();
             }
@@ -192,5 +191,4 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             }
         }
     }
-    int i = 0;
 }

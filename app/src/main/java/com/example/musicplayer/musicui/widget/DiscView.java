@@ -36,7 +36,6 @@ import java.util.List;
 
 
 public class DiscView extends RelativeLayout {
-
     private ImageView mIvNeedle;
     private ViewPager mVpContain;
     private ViewPagerAdapter mViewPagerAdapter;

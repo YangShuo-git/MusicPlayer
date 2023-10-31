@@ -29,6 +29,7 @@ import com.example.musicplayer.musicui.widget.DiscView;
 import com.example.musicplayer.service.MusicService;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,6 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
     private ImageView mIvPlayOrPause, mIvNext, mIvLast;
     private TextView mTvMusicDuration,mTvTotalMusicDuration;
     private BackgourndAnimationRelativeLayout mRootLayout;
-
     public static final String PARAM_MUSIC_LIST = "PARAM_MUSIC_LIST";
     public DisplayUtil displayUtil = new DisplayUtil();
     private MusicReceiver mMusicReceiver = new MusicReceiver();
@@ -85,17 +85,27 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
         }.start();
     }
 
-    private void initMusicReceiver() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PLAY);
-        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PAUSE);
-        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_DURATION);
-        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_COMPLETE);
-        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PLAYER_TIME);
-        // 注册本地广播
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMusicReceiver,intentFilter);
-    }
+    private void initMusicDatas() {
+        MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music1.mp3").getAbsolutePath());
+        MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music2.mp3").getAbsolutePath());
+        MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music3.mp3").getAbsolutePath());
+        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻", "三亩地");
+        MusicData musicData7 = new MusicData(R.raw.music2, R.raw.ic_music2, "Nightingale", "YANI");
+        MusicData musicData8 = new MusicData(R.raw.music3, R.raw.ic_music3, "Cornfield Chase", "Hans Zimmer");
+        mMusicDatas.add(musicData6);
+        mMusicDatas.add(musicData7);
+        mMusicDatas.add(musicData8);
 
+        ArrayList<String> list = new ArrayList();
+        list.add(musicData1.getMusicName());
+        list.add(musicData2.getMusicName());
+        list.add(musicData3.getMusicName());
+
+        //  启动MusicService
+        Intent intent = new Intent(this, MusicService.class);
+        intent.putStringArrayListExtra(PARAM_MUSIC_LIST, list);
+        startService(intent);
+    }
     private void initView() {
         mDisc = (DiscView) findViewById(R.id.discview);
         mIvNext = (ImageView) findViewById(R.id.ivNext);
@@ -129,32 +139,24 @@ public class MainActivityMusic extends AppCompatActivity implements DiscView.IPl
             }
         });
     }
+    private void initMusicReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PLAY);
+        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PAUSE);
+        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_DURATION);
+        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_COMPLETE);
+        intentFilter.addAction(MusicService.ACTION_STATUS_MUSIC_PLAYER_TIME);
+        // 注册本地广播
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMusicReceiver,intentFilter);
+    }
+
     private void playCurrentTime(int currentTime, int totalTime) {
         mSeekBar.setProgress(currentTime*100/totalTime);
         this.totalTime = totalTime;
         mTvMusicDuration.setText( DisplayUtil.secdsToDateFormat(currentTime,totalTime));
         mTvTotalMusicDuration.setText(DisplayUtil.secdsToDateFormat(totalTime, totalTime));
     }
-    private void initMusicDatas() {
-        MusicData musicData1 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music1.mp3").getAbsolutePath());
-        MusicData musicData2 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music2.mp3").getAbsolutePath());
-        MusicData musicData3 = new MusicData( new File(Environment.getExternalStorageDirectory(),"music3.mp3").getAbsolutePath());
-        MusicData musicData6 = new MusicData(R.raw.music1, R.raw.ic_music1, "寻", "三亩地");
-        MusicData musicData7 = new MusicData(R.raw.music2, R.raw.ic_music2, "Nightingale", "YANI");
-        MusicData musicData8 = new MusicData(R.raw.music3, R.raw.ic_music3, "Cornfield Chase", "Hans Zimmer");
-        mMusicDatas.add(musicData6);
-        mMusicDatas.add(musicData7);
-        mMusicDatas.add(musicData8);
 
-        ArrayList<String> list = new ArrayList();
-        list.add(musicData1.getMusicName());
-        list.add(musicData2.getMusicName());
-        list.add(musicData3.getMusicName());
-
-        Intent intent = new Intent(this, MusicService.class);
-        intent.putStringArrayListExtra(PARAM_MUSIC_LIST, list);
-        startService(intent);
-    }
     @Override
     public void onMusicInfoChanged(String musicName, String musicAuthor) {
         getSupportActionBar().setTitle(musicName);

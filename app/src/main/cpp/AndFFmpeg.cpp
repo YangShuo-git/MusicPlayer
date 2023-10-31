@@ -26,45 +26,6 @@ void AndFFmpeg::prepared() {
     pthread_create(&demuxThead, NULL, demuxFFmpeg, this);
 }
 
-// 打开解码器
-int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecpar) {
-    /* ************************ 打开解码器4步曲 ************************ */
-    *codecCtx = avcodec_alloc_context3(NULL);
-    if(!*codecCtx){
-        if(LOG_DEBUG){
-            LOGE("Couldn't alloc new decoderCtx");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return -1;
-    }
-    if (avcodec_parameters_to_context(*codecCtx, codecpar) < 0) {
-        if(LOG_DEBUG){
-            LOGE("Couldn't fill decoderCtx");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return -1;
-    }
-    AVCodec *decoder = avcodec_find_decoder(codecpar->codec_id);
-    if(!decoder){
-        if(LOG_DEBUG){
-            LOGE("Couldn't find decoder");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return -1;
-    }
-    if (avcodec_open2(*codecCtx , decoder, NULL) < 0) {
-        LOGE("Couldn't open vAudio codec.\n");
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return -1;
-    }
-    /* ************************ 打开解码器结束 ************************ */
-    return 0;
-}
-
 // 解封装
 int AndFFmpeg::demuxFFmpegThead() {
     pthread_mutex_lock(&init_mutex);
@@ -108,15 +69,55 @@ int AndFFmpeg::demuxFFmpegThead() {
     /* ************************** 解封装结束 ************************** */
 
     if (andAudio != NULL) {
-        openDecoder(&andAudio->codecCtx, andAudio->codecpar);
-        LOGD("成功打开音频解码器.\n");
+        if (openDecoder(&andAudio->codecCtx, andAudio->codecpar) == 0) {
+            LOGD("成功打开音频解码器.\n");
+            pthread_mutex_unlock(&init_mutex);
+        }
     }
-    pthread_mutex_unlock(&init_mutex);
 
     // C++调用java层的onCallPrepared()
     // 这里是回调java层函数，可以将一些状态回调到java层  使用子线程
     callJava->onCallPrepared(CHILD_THREAD);
 
+    return 0;
+}
+
+// 打开解码器
+int AndFFmpeg::openDecoder (AVCodecContext **codecCtx, AVCodecParameters *codecpar) {
+    /* ************************ 打开解码器4步曲 ************************ */
+    *codecCtx = avcodec_alloc_context3(NULL);
+    if(!*codecCtx){
+        if(LOG_DEBUG){
+            LOGE("Couldn't alloc new decoderCtx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if (avcodec_parameters_to_context(*codecCtx, codecpar) < 0) {
+        if(LOG_DEBUG){
+            LOGE("Couldn't fill decoderCtx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    AVCodec *decoder = avcodec_find_decoder(codecpar->codec_id);
+    if(!decoder){
+        if(LOG_DEBUG){
+            LOGE("Couldn't find decoder");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if (avcodec_open2(*codecCtx , decoder, NULL) < 0) {
+        LOGE("Couldn't open vAudio codec.\n");
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    /* ************************ 打开解码器结束 ************************ */
     return 0;
 }
 

@@ -53,10 +53,11 @@ JNIEXPORT void JNICALL
 Java_com_example_musicplayer_service_AndPlayer_n_1pause(JNIEnv *env, jobject thiz) {
     if(ffmpeg != NULL)
     {
-        if (!playStatus->pause)
-        {
-            ffmpeg->pause();
-        }
+        ffmpeg->pause();
+//        if (!playStatus->pause)
+//        {
+//            ffmpeg->pause();
+//        }
     }
 }
 extern "C"
